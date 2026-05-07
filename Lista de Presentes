@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="bg-[#F9F7F2] font-sans scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Levi & Victória - Um Jardim Consagrado a Deus</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond&family=Montserrat&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #F9F7F2; /* Bege/Areia */
+      color: #5D6D54; /* Verde Botânico */
+    }
+    h1, h2, h3 {
+      font-family: 'Cormorant Garamond', serif;
+    }
+    /* subtle card shadow and wood tone border */
+    .card {
+      border: 2px solid #d9cbb6; /* madeira clara */
+      background-color: #ffffffcc;
+      box-shadow: 0 4px 10px rgb(93 109 84 / 0.15);
+      border-radius: 0.5rem;
+      transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgb(93 109 84 / 0.3);
+    }
+    /* Button styling for PIX popup */
+    .btn-pix {
+      background-color: #5D6D54;
+      color: #F9F7F2;
+      font-weight: 600;
+      padding: 0.4rem 1.2rem;
+      border-radius: 0.375rem;
+      transition: background-color 0.2s ease;
+    }
+    .btn-pix:hover {
+      background-color: #4a593f;
+    }
+    .btn-credito {
+      background-color: #A6B49D;
+      color: #F9F7F2;
+      font-weight: 600;
+      padding: 0.4rem 1.2rem;
+      border-radius: 0.375rem;
+      transition: background-color 0.2s ease;
+    }
+    .btn-credito:hover {
+      background-color: #8a9a7e;
+    }
+    /* Floating RSVP WhatsApp Button */
+    #rsvp-btn {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background-color: #5D6D54;
+      color: #F9F7F2;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgb(93 109 84 / 0.3);
+      cursor: pointer;
+      z-index: 50;
+      transition: background-color 0.2s ease;
+    }
+    #rsvp-btn:hover {
+      background-color: #4a593f;
+    }
+    /* PIX popup */
+    .pix-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ffffffee;
+      border: 2px solid #d9cbb6;
+      border-radius: 0.75rem;
+      padding: 1.5rem 2rem;
+      max-width: 320px;
+      box-shadow: 0 8px 24px rgb(93 109 84 / 0.4);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      color: #5D6D54;
+      text-align: center;
+    }
+    .pix-popup.active {
+      display: flex;
+    }
+    .pix-key {
+      user-select: all;
+      font-weight: 700;
+      font-size: 1.125rem;
+      background: #f1eedf;
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      letter-spacing: 0.04em;
+    }
+    .pix-instruction {
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+    .pix-close {
+      background-color: transparent;
+      border: none;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #5D6D54;
+      cursor: pointer;
+      position: absolute;
+      top: 0.5rem;
+      right: 0.75rem;
+      line-height: 1;
+    }
+
+    /* Responsive container padding */
+    .container {
+      padding-left: 1.2rem;
+      padding-right: 1.2rem;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        max-width: 720px;
+      }
+    }
+    @media (min-width:1024px) {
+      .container {
+        max-width: 960px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container py-10">
+    <!-- Cabeçalho com identidade -->
+    <header class="mb-10 text-center">
+      <h1 class="text-4xl md:text-5xl font-serif font-semibold mb-2">Dr. Levi & Victória</h1>
+      <p class="text-green-800 font-serif text-lg italic">Um Jardim Consagrado a Deus</p>
+    </header>
+
+    <!-- Seção de Boas-vindas -->
+    <section aria-label="Boas-vindas" class="mb-12">
+      <h2 class="text-2xl font-serif font-semibold mb-3 border-b border-[#d9cbb6] pb-1 max-w-max mx-auto text-center">Bem-vindos à nossa nova fase</h2>
+      <p class="text-center text-[#5D6D54] max-w-xl mx-auto leading-relaxed">
+        Estamos iniciando uma linda jornada em São Paulo. Este espaço reflete nosso sonho: um jardim abençoado e consagrado a Deus, símbolo do nosso amor e renovação. Esperamos que você, nosso querido convidado, sinta-se parte deste momento especial.
+      </p>
+    </section>
+
+    <!-- Lista de Presentes (Cotas) -->
+    <section aria-label="Lista de Presentes" class="mb-14">
+      <h2 class="text-2xl font-serif font-semibold mb-6 border-b border-[#d9cbb6] pb-1 max-w-max mx-auto text-center">Nossa Lista de Presentes (Cotas)</h2>
+
+      <div id="gifts" class="grid gap-6">
+        <!-- Cada cartão representa uma cota -->
+        <!-- Exemplo - duplicar para cada item -->
+        <article class="card p-6 flex flex-col rounded-lg relative">
+          <h3 class="font-serif text-xl mb-4">Mudança para São Paulo</h3>
+          <p class="flex-grow text-[#4a593f] leading-relaxed mb-6">Contribua para que nossa mudança seja leve e sem preocupações.</p>
+          <div class="flex gap-4 flex-wrap justify-center md:justify-start">
+            <button
+              class="btn-pix"
+              aria-describedby="pix-info-mudanca"
+              type="button"
+              data-pix="123e4567-e89b-12d3-a456-426614174000"
+              title="Mostrar chave PIX Mudança para São Paulo"
+            >PIX</button>
+            <a
+              href="https://link-externo-mercadopago.com.br" 
+              target="_blank" rel="noopener noreferrer"
+              class="btn-credito"
+              aria-label="Pagar Mudança para São Paulo com Cartão de Crédito"
+              >Cartão de Crédito</a>
+          </div>
+        </article>
+
+        <article class="card p-6 flex flex-col rounded-lg relative">
+          <h3 class="font-serif text-xl mb-4">Itens para o Novo Studio</h3>
+          <p class="flex-grow text-[#4a593f] leading-relaxed mb-6">Ajudem-nos a equipar nosso espaço de trabalho e lazer.</p>
+          <div class="flex gap-4 flex-wrap justify-center md:justify-start">
+            <button
+              class="btn-pix"
+              aria-describedby="pix-info-studio"
+              type="button"
+              data-pix="studio.pix@exemplo.com"
+              title="Mostrar chave PIX Itens para o Novo Studio"
+            >PIX</button>
+            <a
+              href="https://link-externo-mercadopago.com.br" 
+              target="_blank" rel="noopener noreferrer"
+              class="btn-credito"
+              aria-label="Pagar Itens para o Novo Studio com Cartão de Crédito"
+              >Cartão de Crédito</a>
+          </div>
+        </article>
+
+        <article class="card p-6 flex flex-col rounded-lg relative">
+          <h3 class="font-serif text-xl mb-4">Jantar Romântico em SP</h3>
+          <p class="flex-grow text-[#4a593f] leading-relaxed mb-6">Contribua para nossa noite inesquecível em São Paulo.</p>
+          <div class="flex gap-4 flex-wrap justify-center md:justify-start">
+            <button
+              class="btn-pix"
+              aria-describedby="pix-info-jantar"
+              type="button"
+              data-pix="55.555.555/0001-99"
+              title="Mostrar chave PIX Jantar Romântico em SP"
+            >PIX</button>
+            <a
+              href="https://link-externo-mercadopago.com.br" 
+              target="_blank" rel="noopener noreferrer"
+              class="btn-credito"
+              aria-label="Pagar Jantar Romântico em SP com Cartão de Crédito"
+              >Cartão de Crédito</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- PIX popup com chave e instruções -->
+  <section id="pix-popup" class="pix-popup" role="dialog" aria-modal="true" aria-labelledby="pix-title" aria-describedby="pix-desc">
+    <button aria-label="Fechar popup PIX" class="pix-close" id="pix-close-btn">&times;</button>
+    <h3 id="pix-title" class="font-serif text-2xl mb-2">Chave PIX</h3>
+    <p id="pix-desc" class="pix-instruction">Toque e segure para copiar a chave abaixo e realize sua contribuição via PIX sem taxas:</p>
+    <div class="pix-key" id="pix-key">--</div>
+  </section>
+
+  <!-- Botão flutuante para RSVP via WhatsApp -->
+  <a
+    href="https://wa.me/5500000000000?text=Olá%20Levi%20e%20Victória!%20Confirmo%20minha%20presença%20no%20casamento%20com%20muita%20alegria."
+    target="_blank"
+    rel="noopener noreferrer"
+    id="rsvp-btn"
+    aria-label="Confirmar presença via WhatsApp"
+    title="Confirmar presença via WhatsApp"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.52 3.5A11.89 11.89 0 0012.06.5a11.98 11.98 0 00-9.67 11.89c0 2.12.55 4.31 1.6 6.18L2 22l4.22-2.77a11.72 11.72 0 007.84 2.56h.03a11.87 11.87 0 008.4-20.23zm-8.46 16.67a9.12 9.12 0 01-4.55-1.3l-.33-.2-2.5 1.64.84-2.56-.22-.38a9 9 0 113.8 2.8zm5.9-6.1l-2.68-.77a1 1 0 00-1 .26l-.6.59-.27-.16a4.44 4.44 0 01-2.1-2.59l-.43-1.35a.69.69 0 01.45-.8l.62-.27a.41.41 0 01.48.05l2 1.5a.74.74 0 01.26.78l-.38 1.16a.46.46 0 00.37.59l2.53.75a.52.52 0 01.31.54 5.31 5.31 0 01-1.11 2.05z"/>
+    </svg>
+  </a>
+
+  <script>
+    /* 
+      Exibe ou esconde popup PIX com a chave da cota clicada.
+      A chave está no atributo data-pix do botão PIX.
+    */
+    document.querySelectorAll('.btn-pix').forEach(button => {
+      button.addEventListener('click', () => {
+        const pixPopup = document.getElementById('pix-popup');
+        const pixKey = document.getElementById('pix-key');
+        const pixValue = button.getAttribute('data-pix');
+
+        pixKey.textContent = pixValue;
+        pixPopup.classList.add('active');
+      });
+    });
+
+    // Fechar popup PIX ao clicar no botão
+    document.getElementById('pix-close-btn').addEventListener('click', () => {
+      document.getElementById('pix-popup').classList.remove('active');
+    });
+
+    // Fechar popup PIX ao clicar fora do conteúdo
+    document.getElementById('pix-popup').addEventListener('click', (event) => {
+      if (event.target === event.currentTarget) {
+        event.currentTarget.classList.remove('active');
+      }
+    });
+  </script>
+
+</body>
+</html>
