@@ -526,10 +526,6 @@
     <h2>Lista de Presentes</h2>
   </div>
   <p class="registry-intro">Organizamos por ambiente da casa. Escolha um item e contribua via Pix ou cart&atilde;o &mdash; o link do cart&atilde;o abre uma conversa direta com o Levi no WhatsApp para gerar o parcelamento.</p>
-  <div class="registry-total">
-    <span class="amount" id="total-amount">R$ 0</span>
-    <span class="label">em itens para come&ccedil;ar a vida a dois</span>
-  </div>
   <div id="rooms"></div>
 </section>
 
@@ -588,14 +584,11 @@ function payCard(itemName, valor){
 }
 
 const roomsEl = document.getElementById('rooms');
-let total = 0;
 const byRoom = {};
 GIFTS.forEach(g=>{
-  total += g.valor;
   if(!byRoom[g.ambiente]) byRoom[g.ambiente] = [];
   byRoom[g.ambiente].push(g);
 });
-document.getElementById('total-amount').textContent = brl(total);
 
 ROOM_ORDER.forEach(room=>{
   const items = byRoom[room];
