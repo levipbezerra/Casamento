@@ -42,7 +42,7 @@
 <div id="team-view" hidden>
 <div class="panel"><div class="panel-heading"><div><h2>Equipe da portaria</h2><p>Cadastre quem pode escanear QR Codes sem liberar a lista de convidados.</p></div></div>
 <form class="fields" id="staff-form"><label class="field">E-mail da pessoa<input id="staff-email" type="email" required placeholder="recepcao@exemplo.com"></label>
-<label class="field">Permissão<select id="staff-role"><option value="door">Portaria — apenas confirmar entradas</option><option value="admin">Administrador — acesso completo</option></select></label>
+<label class="field">Permissão<select id="staff-role" disabled><option value="door">Portaria — apenas confirmar entradas</option></select></label>
 <div class="field span"><button class="btn gold" type="submit">Autorizar perfil</button></div></form>
 <div class="note">Depois de autorizado, o colaborador acessa o link separado da portaria e solicita um link de entrada no próprio e-mail.</div>
 <div id="staff-list" class="staff-grid"></div>
@@ -64,7 +64,7 @@
 <form id="guest-form"><input type="hidden" id="guest-id"><div class="fields">
 <label class="field span">Nome completo<input id="guest-name" required maxlength="180"></label>
 <label class="field">Tipo de convidado<select id="guest-type"></select></label>
-<label class="field">Número da planilha (opcional)<input id="guest-number" type="number" min="1"></label>
+<label class="field">Número da planilha (opcional)<input id="guest-number" type="number" min="1"></label><label class="field span">Novo tipo (opcional, substitui a seleção acima)<input id="guest-new-type" maxlength="70" placeholder="Ex.: Familiar, Criança, Equipe..."></label>
 <label class="field">Convite enviado?<select id="guest-invite"><option value="">Não informado</option><option value="Enviada">Enviado</option><option value="Pendente">Pendente</option></select></label>
 <label class="field">Confirmação antecipada<select id="guest-rsvp"><option value="">Não informado</option><option value="CONFIRMADO">Confirmado</option><option value="NÃO CONFIRMADO">Não confirmado</option></select></label>
 <label class="field span">Observações<textarea id="guest-notes" placeholder="Detalhes opcionais"></textarea></label>
