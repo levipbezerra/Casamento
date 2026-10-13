@@ -151,7 +151,7 @@ function openEditor(guest){
   const g=guest||{};
   $('editor-title').textContent=guest?'Editar convidado':'Novo convidado';
   $('guest-id').value=g.id||'';$('guest-name').value=g.name||'';$('guest-number').value=g.legacy_number||'';
-  $('guest-type').value=g.guest_type||'Convidado';$('guest-invite').value=g.invitation_status||'';
+  $('guest-type').value=g.guest_type||'Convidado';$('guest-new-type').value='';$('guest-invite').value=g.invitation_status||'';
   $('guest-rsvp').value=g.rsvp_status||'';$('guest-notes').value=g.notes||'';$('guest-ok').checked=!!g.list_ok;
   if(g.invitation_status&&!Array.from($('guest-invite').options).some(o=>o.value===g.invitation_status))$('guest-invite').add(new Option(g.invitation_status,g.invitation_status));
   if(g.rsvp_status&&!Array.from($('guest-rsvp').options).some(o=>o.value===g.rsvp_status))$('guest-rsvp').add(new Option(g.rsvp_status,g.rsvp_status));
@@ -162,7 +162,7 @@ async function saveGuest(ev){
   const button=$('save-guest');button.disabled=true;
   const id=$('guest-id').value,payload={
     name:$('guest-name').value.trim(),
-    guest_type:$('guest-type').value,
+    guest_type:$('guest-new-type').value.trim()||$('guest-type').value,
     legacy_number:$('guest-number').value?Number($('guest-number').value):null,
     invitation_status:$('guest-invite').value,
     rsvp_status:$('guest-rsvp').value,
