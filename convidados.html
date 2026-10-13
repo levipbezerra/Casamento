@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><title>Lista de convidados | Victória & Levi</title>
+<link rel="stylesheet" href="./wedding-app.css"></head>
+<body data-page="admin">
+<header class="masthead"><div class="brand"><span class="monogram">V·L</span><span><strong>Victória & Levi</strong><small>28 de dezembro de 2026 · Área privada</small></span></div>
+<div class="top-right"><span class="account" id="account-label">Gestão dos convidados</span><button class="btn ghost sm" id="logout-btn" hidden>Sair</button></div></header>
+<main class="container">
+<section class="login-shell" id="auth-shell"><div class="login-brand">V·L</div><div class="eyebrow" style="margin-top:20px">Acesso reservado</div><h1>Nossos convidados.</h1>
+<p>Uma lista especial, organizada com carinho e protegida por autenticação. Somente a administração autorizada pode editar os dados.</p>
+<form id="auth-form"><label class="field">Seu e-mail de acesso<input type="email" id="auth-email" required autocomplete="email" placeholder="seu@email.com"></label>
+<button class="btn gold full" type="submit">Receber link de acesso</button></form>
+<p class="subtle" id="auth-message" aria-live="polite">Enviaremos um link de acesso ao seu e-mail.</p></section>
+
+<section id="app-shell" hidden>
+<div class="page-header"><div><div class="eyebrow">Central do casamento · Uso exclusivo</div><h1>Gestão de convidados</h1><p>Cadastros, confirmações de presença e QR Codes individuais.</p></div>
+<div class="header-actions"><button class="btn outline" id="import-top">Importar planilha</button><button class="btn gold" id="add-guest">+ Novo convidado</button></div></div>
+
+<nav class="tabs" aria-label="Seções da gestão">
+<button class="tab active" data-view="guests">Convidados</button>
+<button class="tab" data-view="team">Equipe da portaria</button>
+<button class="tab" data-view="files">Importação e exportação</button>
+</nav>
+
+<div id="guests-view">
+<div class="stats">
+<div class="stat"><small>Total de convidados</small><strong id="stat-total">—</strong><span class="detail">Lista geral</span></div>
+<div class="stat"><small>Já entraram</small><strong id="stat-arrived">—</strong><span class="detail">Check-in realizado</span></div>
+<div class="stat"><small>Aguardando entrada</small><strong id="stat-pending">—</strong><span class="detail">Acompanhamento ao vivo</span></div>
+<div class="stat"><small>Presenças confirmadas</small><strong id="stat-rsvp">—</strong><span class="detail">Confirmação antecipada</span></div>
+</div>
+<div class="panel"><div class="panel-heading"><div><h3>Relação de convidados</h3><p>Edite nomes e categorias sem alterar o QR Code de cada pessoa.</p></div><span id="shown-count" class="badge gold">—</span></div>
+<div class="filters"><label class="search"><input id="search-guests" placeholder="Buscar por nome ou número…" aria-label="Buscar convidados"></label>
+<select class="select-filter" id="type-filter" aria-label="Filtrar por tipo"><option value="">Todos os tipos</option></select>
+<select class="select-filter" id="checkin-filter" aria-label="Filtrar por entrada"><option value="">Todas as entradas</option><option value="entered">Já entraram</option><option value="pending">Não entraram</option></select>
+<button class="btn outline" id="reload-guests">Atualizar</button></div>
+<div class="table-wrap"><table><thead><tr><th>Nº</th><th>Nome</th><th>Tipo</th><th>RSVP</th><th>Entrada</th><th>Ações</th></tr></thead><tbody id="guests-body"><tr><td colspan="6" class="empty">Carregando…</td></tr></tbody></table></div>
+</div>
+<div class="note">O registro de entrada do casamento é independente do status de convite ou confirmação antecipada da planilha. Para testar, confirme uma entrada e use “Desfazer entrada” para restaurar.</div>
+</div>
+
+<div id="team-view" hidden>
+<div class="panel"><div class="panel-heading"><div><h2>Equipe da portaria</h2><p>Cadastre quem pode escanear QR Codes sem liberar a lista de convidados.</p></div></div>
+<form class="fields" id="staff-form"><label class="field">E-mail da pessoa<input id="staff-email" type="email" required placeholder="recepcao@exemplo.com"></label>
+<label class="field">Permissão<select id="staff-role"><option value="door">Portaria — apenas confirmar entradas</option><option value="admin">Administrador — acesso completo</option></select></label>
+<div class="field span"><button class="btn gold" type="submit">Autorizar perfil</button></div></form>
+<div class="note">Depois de autorizado, o colaborador acessa o link separado da portaria e solicita um link de entrada no próprio e-mail.</div>
+<div id="staff-list" class="staff-grid"></div>
+</div></div>
+
+<div id="files-view" hidden>
+<div class="split">
+<div class="panel"><h2>Importar convidados</h2><p class="subtle">Carregue a planilha original ou o CSV preparado. Os campos de origem “CASAL” são ignorados; apenas o tipo do convidado será mostrado.</p>
+<div class="file-box"><input type="file" id="import-file" accept=".xlsx,.xls,.csv,text/csv"><p class="subtle">.xlsx · .xls · .csv</p><button class="btn gold" id="start-import" type="button">Importar para a lista</button></div>
+<div class="note">Registros com o mesmo número original são atualizados, preservando seu QR Code e o histórico de check-in. Confira a lista antes de importar uma atualização.</div></div>
+<div class="panel"><h2>Exportar lista</h2><p class="subtle">Baixe uma cópia privada para seu computador. Não compartilhe este arquivo em locais públicos.</p>
+<button class="btn outline" id="export-list" type="button">Baixar CSV atualizado</button><p class="subtle" id="import-summary"></p></div></div>
+</div>
+</section>
+</main>
+
+<div class="dialog-shade" id="editor-modal" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+<header><h2 id="editor-title">Convidado</h2><button class="x" data-close="editor-modal" aria-label="Fechar">×</button></header>
+<form id="guest-form"><input type="hidden" id="guest-id"><div class="fields">
+<label class="field span">Nome completo<input id="guest-name" required maxlength="180"></label>
+<label class="field">Tipo de convidado<select id="guest-type"></select></label>
+<label class="field">Número da planilha (opcional)<input id="guest-number" type="number" min="1"></label>
+<label class="field">Convite enviado?<select id="guest-invite"><option value="">Não informado</option><option value="Enviada">Enviado</option><option value="Pendente">Pendente</option></select></label>
+<label class="field">Confirmação antecipada<select id="guest-rsvp"><option value="">Não informado</option><option value="CONFIRMADO">Confirmado</option><option value="NÃO CONFIRMADO">Não confirmado</option></select></label>
+<label class="field span">Observações<textarea id="guest-notes" placeholder="Detalhes opcionais"></textarea></label>
+<label class="field span"><span><input type="checkbox" id="guest-ok"> Marcado como OK na planilha de origem</span></label>
+</div><div class="dialog-footer"><button class="btn outline" data-close="editor-modal" type="button">Cancelar</button><button class="btn gold" id="save-guest" type="submit">Salvar convidado</button></div></form>
+</div></div>
+
+<div class="dialog-shade" id="qr-modal" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+<header><h2 id="qr-title">Convite individual</h2><button class="x" data-close="qr-modal" aria-label="Fechar">×</button></header>
+<div class="qr-paper"><div class="eyebrow">Nosso grande dia</div><h2>Victória <span style="color:#b89355">&</span> Levi</h2>
+<p>28 · 12 · 2026</p><div class="qr-box" id="qr-box"></div><h3 id="qr-guest-name"></h3><p id="qr-guest-type"></p><div class="qr-footer">Apresente este QR Code na entrada</div></div>
+<div class="dialog-footer"><button class="btn outline" id="print-qr">Imprimir</button><button class="btn gold" id="download-qr">Baixar QR Code</button></div>
+</div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<script src="./wedding-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="./wedding-app.js"></script></body></html>
