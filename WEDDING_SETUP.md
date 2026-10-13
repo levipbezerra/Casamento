@@ -26,7 +26,7 @@ A camada de dados contém:
 O módulo frontend já aponta para a URL e chave **publicável** do projeto Supabase "Portal Eetika" em \`wedding-config.js\` — não é uma credencial privilegiada. Há isolamento por tabelas, funções e regras de acesso próprios.
 
 1. Corrija o acesso PostgreSQL do projeto no Supabase se o banco responder com \`28P01 password authentication failed\`. Sem isso, o frontend não poderá acessar suas tabelas.
-2. Execute \`database/wedding-setup.sql\` no SQL Editor do projeto correto. Revise o e-mail de administrador ao final desse arquivo: está predefinido \`levipbezerra2@gmail.com\` pela conta GitHub conectada.
+2. Execute \`database/wedding-setup.sql\` no SQL Editor do projeto correto. Execute privadamente, no SQL Editor do Supabase, o comando de bootstrap comentado ao final desse SQL usando seu e-mail verificado. Nunca publique o e-mail administrativo no repositório.
 3. Em Supabase Authentication > URL Configuration, adicione os endereços HTTPS exatos de \`convidados.html\` e \`portaria.html\` aos URLs autorizados de redirecionamento de e-mail.
 4. Em Authentication, valide a política de signup e disparo de links por e-mail. A interface usa \`signInWithOtp\`: o endereço precisa ser autorizado na tabela \`wedding_staff\` para enxergar dados.
 5. Entre em \`convidados.html\` com o e-mail de administrador, faça a importação privada do arquivo completo (118 convidados) e confira o total.
