@@ -186,11 +186,11 @@ revoke all on function wedding_private.has_role(text) from public, anon;
 grant execute on function wedding_private.has_role(text) to authenticated;
 revoke all on function wedding_private.guest_change_log() from public, anon;
 
--- Acesso inicial: o único administrador é o proprietário da conta GitHub.
--- Ajustar o e-mail aqui caso o e-mail da conta de autenticação seja outro.
-insert into public.wedding_staff (email,role,active)
-values ('levipbezerra2@gmail.com','admin',true)
-on conflict (email) do nothing;
+-- BOOTSTRAP PRIVADO: não divulgar e-mail de administrador no GitHub público.
+-- Após executar o schema, use APENAS no SQL Editor privado:
+-- insert into public.wedding_staff(email, role, active)
+-- values (lower('EMAIL_DO_ADMINISTRADOR@DOMINIO.COM'), 'admin', true)
+-- on conflict (email) do nothing;
 
 -- Validação após execução:
 -- select count(*) from public.wedding_staff where role = 'admin';
