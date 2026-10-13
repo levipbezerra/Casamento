@@ -55,3 +55,7 @@ O frontend precisa de conexão à internet e HTTPS para uso da câmera. Nenhum a
 - O site original de presentes continua inalterado.
 
 **Status de implementação:** os arquivos de interface, lógica e SQL estão no GitHub. A aplicação em produção depende de concluir a migração do banco, cadastrar os e-mails/redirects e importar a lista privadamente. Não declare sincronização ativa até validar esses passos.
+
+## Hospedagem declarada no GitHub
+
+O repositório informa o endereço `https://casamento-psi-two.vercel.app`. Após confirmar o deploy, os caminhos previstos são `/convidados.html` e `/portaria.html`. O projeto não apareceu na conta Vercel conectada a esta conversa, portanto não foi possível verificar que esses caminhos já estão disponíveis na publicação.
