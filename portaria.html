@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><title>Portaria | Victória & Levi</title>
+<link rel="stylesheet" href="./wedding-app.css"></head><body data-page="door">
+<header class="masthead"><div class="brand"><span class="monogram">V·L</span><span><strong>Victória & Levi</strong><small>28 de dezembro de 2026 · Portaria</small></span></div><div class="top-right"><span class="account" id="account-label">Check-in de convidados</span><button class="btn ghost sm" id="logout-btn" hidden>Sair</button></div></header>
+<main class="container">
+<section class="login-shell" id="auth-shell"><div class="login-brand">V·L</div><div class="eyebrow" style="margin-top:20px">Acesso da recepção</div><h1>Sejam bem-vindos.</h1><p>Identificação segura e rápida dos convidados pelo QR Code do convite. Acesso permitido somente à equipe autorizada.</p>
+<form id="auth-form"><label class="field">E-mail autorizado<input type="email" id="auth-email" required autocomplete="email" placeholder="seu@email.com"></label><button class="btn gold full" type="submit">Receber link de acesso</button></form>
+<p class="subtle" id="auth-message" aria-live="polite">Peça ao administrador para autorizar seu e-mail antes de entrar.</p></section>
+<section id="app-shell" hidden>
+<div class="page-header"><div><div class="eyebrow">Recepção · 28 de dezembro de 2026</div><h1>Check-in de convidados</h1><p>Aproxime a câmera do QR Code impresso no convite.</p></div><button class="btn outline" id="refresh-stats">Atualizar números</button></div>
+<div class="mini-stats"><div><small>Convidados</small><strong id="door-total">—</strong></div><div><small>Presentes</small><strong id="door-arrived">—</strong></div><div><small>Aguardando</small><strong id="door-pending">—</strong></div></div>
+<div class="door-layout">
+<div class="scan-stage"><div class="eyebrow">Leitura do convite</div><h2 style="margin:12px 0;color:white">Escanear QR Code</h2><div id="reader"></div>
+<div class="door-controls"><button class="btn gold" id="start-camera">Abrir câmera</button><button class="btn ghost" id="stop-camera" disabled>Encerrar câmera</button></div>
+<p style="font-size:12px;color:#cbd6e5;margin-top:20px">Permita o acesso à câmera. É necessário abrir esta página em HTTPS.</p></div>
+<div class="panel" style="margin:0"><h3>Validação da entrada</h3><p class="subtle">Cada QR Code corresponde a uma pessoa e só pode registrar uma entrada.</p>
+<div class="scan-result" id="scan-result"><div class="result-icon">◇</div><h2>Aguardando leitura</h2><p class="subtle">O convidado aparecerá aqui após a leitura do QR Code.</p></div>
+<div style="margin-top:18px"><label class="field">Código manual (opcional)</label><div class="manual"><input type="text" id="manual-token" placeholder="W26:xxxxxxxx-xxxx-…" autocomplete="off"><button class="btn outline" id="manual-check">Consultar</button></div></div>
+</div></div><div class="note">O botão “Confirmar entrada” efetiva o registro para todos os dispositivos. Se o convidado já entrou, o sistema avisa e bloqueia duplicidade. Apenas o administrador pode desfazer o check-in.</div>
+</section></main>
+<div class="toast" id="toast" hidden role="status"></div>
+<script src="./wedding-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script><script src="./wedding-app.js"></script></body></html>
