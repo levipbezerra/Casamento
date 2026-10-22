@@ -20,7 +20,7 @@ const val=cell(p.gift_mode==='value'?money(p.amount_cents):'Entrega física');if
 cell(p.message||'—');const act=cell('');act.className='actions';
 function button(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await fn();await load()}catch(e){$('error').textContent=e.message}finally{b.disabled=false}};act.append(b)}
 if(p.status==='reserved')button('Cancelar reserva',async()=>{if(confirm('Cancelar o compromisso físico deste presente?'))await api('cancel',{id:p.id})});
-if(['reserved','paid'].includes(p.status)&&!p.notified_at)button('Reenviar e-mail',async()=>{const result=await api('retry-notification',{id:p.id});if(!result.sent)throw Error('Configure Resend para enviar e-mail.')});root.append(tr)}}
+if(['reserved','paid'].includes(p.status)&&(!p.notified_at||!p.donor_notified_at))button('Reenviar e-mail',async()=>{const result=await api('retry-notification',{id:p.id});if(!result.sent)throw Error('Configure Resend para enviar e-mail.')});root.append(tr)}}
 $('auth-form').addEventListener('submit',async ev=>{ev.preventDefault();if(!supa){note('Configuração Supabase indisponível');return}const b=ev.currentTarget.querySelector('button');b.disabled=true;note('Enviando link seguro…');try{const email=$('auth-email').value.trim();const {error}=await supa.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});if(error)throw error;note('Abra o link recebido no e-mail autorizado.')}catch(e){note('Não foi possível enviar: '+e.message)}finally{b.disabled=false}});
 $('logout').onclick=async()=>{await supa?.auth.signOut();token='';dashboard(false)};
 $('refresh').onclick=()=>load().catch(e=>$('error').textContent=e.message);
