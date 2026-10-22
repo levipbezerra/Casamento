@@ -14,8 +14,10 @@ create table if not exists public.wedding_gift_pledges(
  donor_name text not null,donor_email text not null,message text not null default '',
  base_cents int not null,extra_cents int not null default 0,amount_cents int not null,
  checkout_url text,transaction_nsu text unique,receipt_url text,expires_at timestamptz,
- paid_at timestamptz,notified_at timestamptz,created_at timestamptz not null default now()
+ paid_at timestamptz,notified_at timestamptz,donor_notified_at timestamptz,created_at timestamptz not null default now()
 );
+-- Compatibilidade se a tabela já existir por implantação parcial.
+alter table public.wedding_gift_pledges add column if not exists donor_notified_at timestamptz;
 create index if not exists wg_status_idx on public.wedding_gift_pledges(item_sku,status,expires_at);
 alter table public.wedding_gift_items enable row level security;
 alter table public.wedding_gift_pledges enable row level security;
