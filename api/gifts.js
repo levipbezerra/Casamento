@@ -54,8 +54,10 @@ async function notify(pledge){
 }
 async function checkPayment(pledge,transaction,slug){configPayment();if(!transaction||!slug)return {paid:false};const r=await fetch('https://api.checkout.infinitepay.io/payment_check',{method:'POST',headers:{'X-Api-Key':IP_KEY,'Content-Type':'application/json'},body:JSON.stringify({handle:HANDLE,order_nsu:pledge.id,transaction_nsu:transaction,slug})});if(!r.ok)throw fail('InfinitePay temporariamente indisponível para conferência.',502);const d=await r.json();if(!d.paid)return {paid:false};if(d.amount!==undefined&&Number(d.amount)!==pledge.amount_cents)throw fail('Valor conferido não corresponde ao pedido.',409);const marked=await rpc('wedding_gift_mark_paid',{p_id:pledge.id,p_transaction:transaction,p_receipt:d.receipt_url||''});try{await notify(await pledgeOf(pledge.id))}catch(e){console.error('Falha notificando pagamento',e.message)}return {paid:true,already:marked?.already||false}}
 async function authenticateAdmin(req){requiresDatabase();const token=(req.headers.authorization||'').replace(/^Bearer /i,'');if(!token||token.length<50)throw fail('Autenticação necessária',401);
-const r=await fetch(URL_BASE.replace(/\/$/,'')+'/auth/v1/user',{headers:{apikey:SERVICE,Authorization:'Bearer '+token}});if(!r.ok)throw fail('Sessão inválida',401);const user=await r.json();if(!user.id||!user.email)throw fail('Usuário inválido',401);
-const staff=await db('wedding_staff?select=role,active&email=eq.'+encodeURIComponent(user.email.toLowerCase()));if(!staff?.[0]?.active||staff[0].role!=='admin')throw fail('Acesso restrito ao administrador',403);return user}
+const r=await fetch(URL_BASE.replace(/\/$/,'')+'/auth/v1/user',{headers:{apikey:SERVICE,Authorization:'Bearer '+token}});if(!r.ok)throw fail('Sessão inválida',401);const user=await r.json();if(!user.id||!user.email||!(user.email_confirmed_at||user.confirmed_at))throw fail('E-mail de acesso não confirmado',401);
+const adminEmail=(process.env.GIFT_ADMIN_EMAIL||TO).trim().toLowerCase();
+if(user.email.trim().toLowerCase()!==adminEmail)throw fail('Acesso exclusivo do administrador',403);
+return user}
 async function handler(req,res){
 const url=new URL(req.url,'https://wedding.local'),action=url.searchParams.get('action');
 try{
