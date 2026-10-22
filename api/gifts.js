@@ -17,12 +17,41 @@ const rpc=(name,payload)=>db('rpc/'+name,'POST',payload);
 async function bodyOf(req){if(req.body&&typeof req.body==='object')return req.body;let chunks='';for await(const c of req){chunks+=c;if(chunks.length>24000)throw fail('Pedido muito grande',413)}try{return JSON.parse(chunks||'{}')}catch{throw fail('JSON inválido')}}
 const uuid=s=>typeof s==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 async function pledgeOf(id){if(!uuid(id))throw fail('Identificador inválido');const r=await db('wedding_gift_pledges?select=*&id=eq.'+encodeURIComponent(id));return r?.[0]||null}
-async function notify(pledge){if(!pledge||pledge.notified_at)return true;if(!RESEND_KEY||!SENDER)return false;
-const subject=pledge.gift_mode==='physical'?'Novo compromisso de presente físico':'Presente financeiro confirmado';
-const text=['Casamento Victória & Levi',subject,'Presente: '+pledge.item_sku,'Nome: '+pledge.donor_name,'E-mail: '+pledge.donor_email,'Mensagem: '+(pledge.message||'(nenhuma)'),'Tipo: '+pledge.gift_mode,'Valor base: R$ '+(pledge.base_cents/100).toFixed(2),'Extra: R$ '+(pledge.extra_cents/100).toFixed(2),'Pedido: '+pledge.id].join('\n');
-const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+RESEND_KEY,'Content-Type':'application/json'},body:JSON.stringify({from:SENDER,to:[TO],subject,text})});
-if(!r.ok){console.error('Notificação não entregue:',r.status);return false}
-await db('wedding_gift_pledges?id=eq.'+pledge.id,'PATCH',{notified_at:new Date().toISOString()});return true}
+async function sendMail(to,subject,text){
+ const r=await fetch('https://api.resend.com/emails',{method:'POST',
+ headers:{Authorization:'Bearer '+RESEND_KEY,'Content-Type':'application/json'},
+ body:JSON.stringify({from:SENDER,to:[to],subject,text})});
+ if(!r.ok){console.error('Falha de entrega de notificação',r.status);return false}
+ return true;
+}
+async function notify(pledge){
+ if(!pledge)return false;
+ if(!RESEND_KEY||!SENDER)return false;
+ const done=pledge.gift_mode==='physical'?'reservado':'pago';
+ const subject=pledge.gift_mode==='physical'?'Nova reserva de presente físico':'Novo presente financeiro confirmado';
+ const adminText=['Casamento Victória & Levi',subject,
+ 'Presente: '+pledge.item_sku,'Presenteador: '+pledge.donor_name,
+ 'E-mail: '+pledge.donor_email,'Mensagem: '+(pledge.message||'(nenhuma)'),
+ 'Tipo: '+pledge.gift_mode,'Valor: R$ '+(pledge.base_cents/100).toFixed(2),
+ 'Extra: R$ '+(pledge.extra_cents/100).toFixed(2),'Pedido: '+pledge.id].join('\\n');
+ const guestText=['Olá, '+pledge.donor_name+'!',
+ 'Obrigado por fazer parte do casamento de Victória & Levi.',
+ 'Seu presente foi '+done+': '+pledge.item_sku+'.',
+ pledge.gift_mode==='physical'
+ ?'Sua reserva física está confirmada. Você se comprometeu a entregar uma unidade do presente.'
+ :'Recebemos a confirmação do pagamento pela InfinitePay.',
+ 'Pedido: '+pledge.id,'Mensagem aos noivos: '+(pledge.message||'(não informada)')].join('\\n');
+ let adminOk=Boolean(pledge.notified_at),donorOk=Boolean(pledge.donor_notified_at);
+ if(!adminOk){
+   adminOk=await sendMail(TO,subject,adminText);
+   if(adminOk)await db('wedding_gift_pledges?id=eq.'+pledge.id,'PATCH',{notified_at:new Date().toISOString()});
+ }
+ if(!donorOk){
+   donorOk=await sendMail(pledge.donor_email,'Confirmação de presente · Victória & Levi',guestText);
+   if(donorOk)await db('wedding_gift_pledges?id=eq.'+pledge.id,'PATCH',{donor_notified_at:new Date().toISOString()});
+ }
+ return adminOk&&donorOk;
+}
 async function checkPayment(pledge,transaction,slug){configPayment();if(!transaction||!slug)return {paid:false};const r=await fetch('https://api.checkout.infinitepay.io/payment_check',{method:'POST',headers:{'X-Api-Key':IP_KEY,'Content-Type':'application/json'},body:JSON.stringify({handle:HANDLE,order_nsu:pledge.id,transaction_nsu:transaction,slug})});if(!r.ok)throw fail('InfinitePay temporariamente indisponível para conferência.',502);const d=await r.json();if(!d.paid)return {paid:false};if(d.amount!==undefined&&Number(d.amount)!==pledge.amount_cents)throw fail('Valor conferido não corresponde ao pedido.',409);const marked=await rpc('wedding_gift_mark_paid',{p_id:pledge.id,p_transaction:transaction,p_receipt:d.receipt_url||''});try{await notify(await pledgeOf(pledge.id))}catch(e){console.error('Falha notificando pagamento',e.message)}return {paid:true,already:marked?.already||false}}
 async function authenticateAdmin(req){requiresDatabase();const token=(req.headers.authorization||'').replace(/^Bearer /i,'');if(!token||token.length<50)throw fail('Autenticação necessária',401);
 const r=await fetch(URL_BASE.replace(/\/$/,'')+'/auth/v1/user',{headers:{apikey:SERVICE,Authorization:'Bearer '+token}});if(!r.ok)throw fail('Sessão inválida',401);const user=await r.json();if(!user.id||!user.email)throw fail('Usuário inválido',401);
@@ -32,7 +61,7 @@ const url=new URL(req.url,'https://wedding.local'),action=url.searchParams.get('
 try{
 if(action==='catalog'&&req.method==='GET'){
 const items=await db('wedding_gift_items?select=sku,initial_quantity,physical_allowed&active=eq.true');
-const pledges=await db('wedding_gift_pledges?select=item_sku,status,expires_at');
+const pledges=await db('wedding_gift_pledges?select=item_sku,status,expires_at&limit=5000');
 const now=Date.now();const taken=new Map();for(const p of pledges||[]){if(['reserved','paid'].includes(p.status)||(p.status==='awaiting_payment'&&new Date(p.expires_at).getTime()>now))taken.set(p.item_sku,(taken.get(p.item_sku)||0)+1)}
 return json(res,200,{items:items.map(i=>({sku:i.sku,remaining:!i.physical_allowed?0:i.initial_quantity===null?null:Math.max(0,i.initial_quantity-(taken.get(i.sku)||0))}))})}
 if(action==='pledge'&&req.method==='POST'){
