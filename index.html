@@ -454,6 +454,40 @@
     .countdown .cell{min-width:48px;}
     .countdown .num{font-size:22px;}
   }
+
+.gift-search-wrap{margin:24px 0 26px;padding:17px;background:#fff;border:1px solid var(--rule)}
+.gift-search-wrap label{font-weight:700;font-size:13px;display:block;margin-bottom:9px}
+.gift-search-line{display:flex;gap:10px;align-items:center}
+.gift-search-line input{min-width:0;flex:1;background:#fff;border:1px solid #c7c4bb;padding:13px 14px;border-radius:6px;font:inherit}
+.gift-search-line button{background:var(--navy);color:white;border:0;border-radius:6px;padding:13px 16px;cursor:pointer}
+#gift-result-summary{font-size:12px;opacity:.75;margin:9px 0 0}
+#gift-notice{font-size:13px;margin:10px 0 16px}
+.gift-card .gift-stock{font-size:12px;color:#59606f;min-height:18px}
+.gift-card .gift-stock.sold-out{color:#a13240;font-weight:700}
+.gift-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gift-actions .gift-money{background:#181b28;color:#fff;border:0}
+.gift-actions .gift-physical{background:#efe5cf;color:#271f12;border:1px solid #d6be8e}
+.gift-actions .gift-physical:disabled{background:#ededed;color:#777;cursor:not-allowed}
+.gift-actions button{min-height:42px;border-radius:5px;cursor:pointer}
+.gift-image-ref{color:#665e51;font-size:11px;text-decoration:underline}
+.gift-dialog-shade{position:fixed;inset:0;background:#0b1020bf;z-index:250;display:grid;place-items:center;padding:14px}
+.gift-dialog-shade[hidden],#gift-thanks[hidden],#gift-pledge-form[hidden]{display:none}
+.gift-dialog{position:relative;background:#fff;width:min(100%,520px);max-height:92vh;overflow:auto;padding:28px;border-radius:14px;box-shadow:0 16px 70px #0005}
+.gift-dialog h3{font-family:'Fraunces',serif;font-size:27px;margin:12px 0}
+.gift-dialog-x{position:absolute;right:14px;top:10px;border:0;background:none;font-size:30px;cursor:pointer}
+.gift-dialog p{font-size:13px;line-height:1.6}
+#gift-reference{font-size:12px;margin:14px 0}
+#gift-reference a{color:#31456d;text-decoration:underline}
+#gift-pledge-form{display:grid;gap:12px}
+#gift-pledge-form>label:not(.gift-check){display:grid;gap:6px;font-size:12px;font-weight:700}
+#gift-pledge-form input:not([type=checkbox]),#gift-pledge-form textarea{border:1px solid #c9c9cf;border-radius:6px;padding:11px;font:inherit;width:100%}
+.gift-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;font-weight:600}
+.gift-check input{margin-top:3px}
+.gift-commitment-note{padding:12px;border:1px solid #ead1a3;background:#fff9eb}
+.gift-submit{width:100%;background:#181b28;color:white;padding:14px;border:0;border-radius:7px;font-weight:700;cursor:pointer}
+.gift-submit:disabled{opacity:.55;cursor:wait}
+#gift-form-error{font-size:12px;color:#a13240}
+@media(max-width:500px){.gift-search-line{flex-wrap:wrap}.gift-search-line button{width:100%}.gift-dialog{padding:23px}}
 </style>
 </head>
 <body>
@@ -525,8 +559,10 @@
     <span class="eyebrow">Classificados</span>
     <h2>Lista de Presentes</h2>
   </div>
-  <p class="registry-intro">Organizamos por ambiente da casa. Escolha um item e contribua via Pix ou cart&atilde;o &mdash; o link do cart&atilde;o abre uma conversa direta com o Levi no WhatsApp para gerar o parcelamento.</p>
-  <div id="rooms"></div>
+  <p class="registry-intro">Escolha um presente: contribua com o valor via Pix ou cartão, ou reserve a entrega física quando disponível. As quantidades são limitadas nos itens indicados.</p>
+<div class="gift-search-wrap"><label for="gift-search">Pesquisar presente</label><div class="gift-search-line"><input id="gift-search" type="search" autocomplete="off" placeholder="Ex.: frigidera, panela, jogo de pratos" aria-label="Buscar por nome aproximado"><button id="gift-search-clear" type="button">Limpar</button></div><p id="gift-result-summary" aria-live="polite"></p></div>
+<div id="gift-notice" role="status" aria-live="polite"></div><div id="rooms"></div>
+<div id="gift-dialog" class="gift-dialog-shade" hidden><section class="gift-dialog" role="dialog" aria-modal="true" aria-labelledby="gift-dialog-title"><button id="gift-close" type="button" class="gift-dialog-x" aria-label="Fechar">×</button><span class="eyebrow">Um carinho para nosso lar</span><h3 id="gift-dialog-title">Escolher presente</h3><p id="gift-dialog-details"></p><div id="gift-reference"></div><form id="gift-pledge-form"><label>Seu nome<input id="gift-donor-name" required maxlength="120" autocomplete="name"></label><label>E-mail para confirmação<input id="gift-donor-email" type="email" required maxlength="180" autocomplete="email"></label><label>Mensagem aos noivos<textarea id="gift-message" maxlength="1000" rows="3" placeholder="Uma mensagem especial (opcional)"></textarea></label><label id="gift-extra-label">Valor extra (R$)<input id="gift-extra" type="number" inputmode="decimal" min="0" max="10000" step="0.01" value="0"></label><p id="gift-commitment-note" class="gift-commitment-note"></p><label class="gift-check"><input id="gift-commitment" type="checkbox" required> Confirmo que estou me comprometendo com este presente.</label><div id="gift-form-error" role="alert"></div><button type="submit" class="gift-submit" id="gift-confirm-button">Confirmar presente</button></form><div id="gift-thanks" hidden><p id="gift-thanks-text"></p><button type="button" class="gift-submit" id="gift-thanks-close">Voltar à lista</button></div></section></div>
 </section>
 
 <!-- RSVP -->
@@ -545,118 +581,11 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const GIFTS = [{"ambiente": "Banheiro", "item": "Espelho", "valor": 130, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_872578-MLA105702060236_012026-F.webp"}, {"ambiente": "Banheiro", "item": "Toalha De Rosto", "valor": 120, "foto": "https://m.media-amazon.com/images/I/616SkWK--BL._AC_SX679_.jpg"}, {"ambiente": "Banheiro", "item": "Toalhas De Banho", "valor": 390, "foto": "https://m.media-amazon.com/images/I/61HQYb88SqL._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Air-fryer", "valor": 269, "foto": "https://m.media-amazon.com/images/I/51NKkmrtVEL._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Chaleira", "valor": 80, "foto": "https://m.media-amazon.com/images/I/51K6htcmuWL._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Colheres E Espátulas", "valor": 60, "foto": "https://m.media-amazon.com/images/I/51RDO+bHUiL._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Cooktop", "valor": 300, "foto": "https://m.media-amazon.com/images/I/71uLqItiKiL._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Copos Pequenos 6 Pc E Copos Grandes 6 Pc", "valor": 70, "foto": "https://m.media-amazon.com/images/I/71G3Lel2HXL._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Escorredor De Louça", "valor": 50, "foto": "https://down-br.img.susercontent.com/file/br-11134207-820md-moy3ktcoogzp76@resize_w900_nl.webp"}, {"ambiente": "Cozinha", "item": "Escorredor De Macarrão", "valor": 20, "foto": "https://m.media-amazon.com/images/I/51ETkBYaHgL._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Faqueiro 36 Pc", "valor": 145, "foto": "https://m.media-amazon.com/images/I/614p7dWdJ0L._AC_SY300_SX300_QL70_ML2_.jpg"}, {"ambiente": "Cozinha", "item": "Frigideiras Red Silver", "valor": 800, "foto": "https://www.lojaredsilver.com.br/wp-content/uploads/2024/01/conjunto-redsilver-v1.png"}, {"ambiente": "Cozinha", "item": "Geladeira", "valor": 3300, "foto": "https://imgs.casasbahia.com.br/55071788/1g.jpg?imwidth=500"}, {"ambiente": "Cozinha", "item": "Jarras E Garrafas Térmicas", "valor": 40, "foto": "https://m.media-amazon.com/images/I/415TBP0GUfL._AC_SY300_SX300_QL70_ML2_.jpg"}, {"ambiente": "Cozinha", "item": "Jogo De Panelas", "valor": 800, "foto": "https://convvert.s3.amazonaws.com/profile/6862/products-plans/files/imgplan/c343acb58976/1690400455224kit19.jpg"}, {"ambiente": "Cozinha", "item": "Jogo De Pratos Completo (rasos, Fndos E Sobremesas)", "valor": 360, "foto": "https://m.media-amazon.com/images/I/51HjUseflNS._AC_SY300_SX300_QL70_ML2_.jpg"}, {"ambiente": "Cozinha", "item": "Jogo De Travessas", "valor": 300, "foto": "https://www.lecreuset.com.br/dw/image/v2/BDRT_PRD/on/demandware.static/-/Sites-le-creuset-br-master/default/dw113252a9/images/71102320600001.jpg?sw=650&sh=650&sm=fit"}, {"ambiente": "Cozinha", "item": "Liquidificador", "valor": 200, "foto": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcSXvKhez6Kus56ByjkiWqXe74qXmMOouDvFc8gnyt_R0h8bz3OVAIlNDPOf14u8L0mIG7SbOg4CnOOpOgifAH9KB525iXB3tOXFBp0yqONwVQrx99_qn0-icDQ"}, {"ambiente": "Cozinha", "item": "Microondas", "valor": 400, "foto": "https://electrolux.vtexassets.com/arquivos/ids/223167-800-800?v=638796393208630000&width=800&height=800&aspect=true&format=auto"}, {"ambiente": "Cozinha", "item": "Panela Elétrica De Arroz", "valor": 200, "foto": "https://www.havan.com.br/media/catalog/product/cache/6e8e24cc73e2eff11526e72b5f24c033/p/a/panela-el_trica-de-arroz-ph5p-visor-glass-philco_1009358_4.jpg"}, {"ambiente": "Cozinha", "item": "Processador", "valor": 150, "foto": "https://images.tcdn.com.br/img/img_prod/777993/multiprocessador_turbo_chef_7_em_1_mondial_127v_preto_mpn_01_be_127811_1_d2f33c4ceb9434d17ab6c3aa187eb55d.jpg"}, {"ambiente": "Cozinha", "item": "Sanduicheira", "valor": 150, "foto": "https://m.media-amazon.com/images/I/51UxR8FHe-L._AC_SX679_.jpg"}, {"ambiente": "Cozinha", "item": "Taças", "valor": 100, "foto": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcTlhaxgQm-GJxbYMSKe5sjWhaepIrsfcL6lu49x11P3IPPEWx3NAS_YdvY25hszyD3VpEvNIX8opqPGatPyJ9wBxAnRbPLY"}, {"ambiente": "Cozinha", "item": "Talheres 24 Pc", "valor": 90, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_767591-MLB112371750957_052026-F.webp"}, {"ambiente": "Cozinha", "item": "Tigelas", "valor": 110, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_924335-MLB103011318815_122025-F.webp"}, {"ambiente": "Cozinha", "item": "Tupperware E Potes Herméticos", "valor": 90, "foto": "https://down-br.img.susercontent.com/file/br-11134207-81z1k-mesuqxqzxerld2@resize_w900_nl.webp"}, {"ambiente": "Cozinha", "item": "Xícaras E Pires", "valor": 150, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_662257-MLA84548072114_052025-F.webp"}, {"ambiente": "Lavanderia", "item": "Aspirador De Pó (robô)", "valor": 900, "foto": "https://m.media-amazon.com/images/I/51d+bwNHcaL._AC_SX679_.jpg"}, {"ambiente": "Lavanderia", "item": "Ferro E Tábua De Passar", "valor": 300, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_878977-MLB82959572684_032025-F.webp"}, {"ambiente": "Lavanderia", "item": "Máquina De Lavar (lava E Seca)", "valor": 3000, "foto": "https://electrolux.vtexassets.com/arquivos/ids/213591-800-800?v=637716355481930000&width=800&height=800&aspect=true&format=auto"}, {"ambiente": "Quarto", "item": "Ar-condicionado", "valor": 2500, "foto": "https://m.media-amazon.com/images/I/61SqDV4ba2L._AC_SX522_.jpg"}, {"ambiente": "Quarto", "item": "Cabide (guarda-roupa)", "valor": 100, "foto": "https://m.media-amazon.com/images/I/51m6NvVV70L._AC_SX679_.jpg"}, {"ambiente": "Quarto", "item": "Cama", "valor": 3500, "foto": "https://cdn.ortobom.com.br/file/41ba5b4b-8ab3-43c0-9be6-b667bef6707e/liberty_2.png"}, {"ambiente": "Quarto", "item": "Cobertores", "valor": 65, "foto": "https://m.media-amazon.com/images/I/511zLqXPX2L._AC_SX679_.jpg"}, {"ambiente": "Quarto", "item": "Colcha", "valor": 120, "foto": "https://m.media-amazon.com/images/I/71W45g89BhL._AC_SY300_SX300_QL70_ML2_.jpg"}, {"ambiente": "Quarto", "item": "Fronhas", "valor": 100, "foto": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcQJxZ0XxBio4UT9zFJqrXyPliS7ui4QX7vq0X8pniuihVPS9WYXUe64O6hWqgcInxtIC7sj9DTF1_A6wUQhUg-GlhteLRFtMeuUhVFGjH8oUkv6SIv2aoyoSL4"}, {"ambiente": "Quarto", "item": "Guarda-roupa", "valor": 1400, "foto": "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcSImhNSfrBBTg9xG90MFv0wM1z8fksFLb9VUBY895LwvX1OruCSeLB1fTGt0K-j6XZos1zm6kXQejQqitQTfO5pcpuxa6xRB7u62zIMc_Y"}, {"ambiente": "Quarto", "item": "Jogo De Lençóis", "valor": 135, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_724392-MLA95007996992_102025-F.webp"}, {"ambiente": "Quarto", "item": "Luminária", "valor": 30, "foto": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcSPw8CaKeEqLZyw5gd0VFYgGPUUAaE6aWERn_K8vn3PZR3uZbEUGd9TDCb-7HvJTqHP5gKWXlVCad_1qBUblf_IaElpOWaiiAEu_DswmdU"}, {"ambiente": "Quarto", "item": "Mesa De Cabeceira", "valor": 90, "foto": "https://down-br.img.susercontent.com/file/br-11134207-7r98o-m7m63h3ndswk28.webp"}, {"ambiente": "Quarto", "item": "Travesseiros", "valor": 100, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_750666-MLB86817819868_072025-F.webp"}, {"ambiente": "Quarto", "item": "Cadeira De Escritório", "valor": 800, "foto": "https://tokstok.vteximg.com.br/arquivos/ids/29810175-1920-auto/de-escritorio-web-preto-preto-web_st0.jpg?v=638519757096330000&width=1920&height=auto&aspect=true"}, {"ambiente": "Quarto", "item": "Escrivaninha / Mesa", "valor": 800, "foto": "https://casahuma.cdn.magazord.com.br/img/2024/11/produto/2683/escrivaninha-olivia-com-led-branco-e-amendoa.jpg"}, {"ambiente": "Quarto", "item": "Estante", "valor": 440, "foto": "https://product-hub-prd.madeiramadeira.com.br/694330/images/90ebf660-86b2-4b38-a67d-29b69580beeac3e9e8386943301951500x1500.jpg?width=700&canvas=1:1&bg-color=FFF"}, {"ambiente": "Quarto", "item": "Prateleiras", "valor": 100, "foto": "https://images.cws.digital/produtos/gg/05/74/kit-3-prateleiras-brancas-40x15-8717405-1695988337074.jpg"}, {"ambiente": "Quarto", "item": "Ventilador", "valor": 270, "foto": "https://m.magazineluiza.com.br/a-static/420x420/ventilador-de-mesa-arno-xtreme-force-breeze-vb40-40cm-6-pas-3-velocidades-preto-e-azul/magazineluiza/235629500/46e62b7ca6b4b63ec30531e58a5b9151.jpg"}, {"ambiente": "Sala", "item": "Cortina C/ Blackout", "valor": 250, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_789125-MLA99509623788_112025-F.webp"}, {"ambiente": "Sala", "item": "Rack P/ Tv", "valor": 380, "foto": "https://m.magazineluiza.com.br/a-static/420x420/rack-para-tv-ate-70-1-porta-dj-moveis-flow/magazineluiza/240063600/1aafbdb845a539d18e20b8ec9cabf4e3.jpg"}, {"ambiente": "Sala", "item": "Mesa De Centro", "valor": 120, "foto": "https://product-hub-prd.madeiramadeira.com.br/455972864/images/7d9f4a1b-4b2f-4bdf-97eb-17d9226b0f5934259dfc213a2677633b5f98c3.jpg?width=700&canvas=1:1&bg-color=FFF"}, {"ambiente": "Sala", "item": "Poltrona", "valor": 350, "foto": "https://http2.mlstatic.com/D_NQ_NP_2X_756723-MLB111868559794_062026-F-kit-poltrona-opala-e-puff-redondo-suede-com-almofada-aninha.webp"}, {"ambiente": "Sala", "item": "Sofá", "valor": 2000, "foto": "https://www.ferreiracosta.com/_next/image?url=https%3A%2F%2Fdirogkf3gm8b7.cloudfront.net%2Fproduction%2Fproducts%2F489230%2Fimages%2Fenhanced-media%2F9_360_0449b8bd-d330-438b-8a54-572b60d16475&w=1920&q=100"}, {"ambiente": "Sala", "item": "Tv", "valor": 3500, "foto": "https://m.magazineluiza.com.br/a-static/420x420/smart-tv-50-samsung-uhd-4k-crystal-uhd-u8600f-un50u8600fgxzd-tizen-crystal-4k-bixby-e-alexa-3-hdmi/magazineluiza/240147400/75e1f7e592b5e38e6110ce3e702a3233.jpg"}, {"ambiente": "Varanda", "item": "Aparador", "valor": 170, "foto": "https://down-br.img.susercontent.com/file/br-11134207-820lj-mo422wmt1nuq82_tn"}];
-const ROOM_ORDER = ["Cozinha", "Quarto", "Sala", "Banheiro", "Lavanderia", "Varanda"];
-const ROOM_LABELS = {"Cozinha": "Cozinha", "Quarto": "Quarto", "Sala": "Sala de Estar", "Banheiro": "Banheiro", "Lavanderia": "Lavanderia", "Varanda": "Varanda"};
-const PIX_KEY = "85991068369";
-const PIX_NAME = "Levi Pinheiro Bezerra";
 const WPP_NUMBER = "5585991068369";
 const ADDRESS = "Rua Francisco Teixeira de Alcântara, Praia do Futuro I, Fortaleza - CE, 60182-360";
-
 document.getElementById('map-link').href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(ADDRESS);
-
 const rsvpMsg = "Oi, Levi e Victória! Passando para confirmar minha presença no casamento de vocês no dia 28/12/2026. Mal posso esperar! 🎉";
 document.getElementById('rsvp-link').href = "https://wa.me/" + WPP_NUMBER + "?text=" + encodeURIComponent(rsvpMsg);
-
-function brl(v){
-  return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
-}
-
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(()=> t.classList.remove('show'), 2200);
-}
-
-function copyPix(){
-  navigator.clipboard.writeText(PIX_KEY).then(()=>{
-    showToast('Chave Pix copiada: ' + PIX_KEY + ' (' + PIX_NAME + ')');
-  }).catch(()=>{
-    showToast('Chave Pix: ' + PIX_KEY);
-  });
-}
-
-function payCard(itemName, valor){
-  const msg = 'Oi, Levi e Victória! Eu gostaria de ofertar o/a ' + itemName + ' via cartão, você poderia gerar um link de ' + brl(valor) + ' em X vezes?';
-  window.open('https://wa.me/' + WPP_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
-}
-
-const roomsEl = document.getElementById('rooms');
-const byRoom = {};
-GIFTS.forEach(g=>{
-  if(!byRoom[g.ambiente]) byRoom[g.ambiente] = [];
-  byRoom[g.ambiente].push(g);
-});
-
-ROOM_ORDER.forEach(room=>{
-  const items = byRoom[room];
-  if(!items || !items.length) return;
-  const block = document.createElement('div');
-  block.className = 'room-block';
-
-  const head = document.createElement('div');
-  head.className = 'room-head';
-  head.innerHTML = '<h3>' + (ROOM_LABELS[room] || room) + '</h3><span class="count">' + items.length + ' ' + (items.length===1?'item':'itens') + '</span>';
-  block.appendChild(head);
-
-  const grid = document.createElement('div');
-  grid.className = 'grid';
-
-  items.forEach((g, idx)=>{
-    const card = document.createElement('div');
-    card.className = 'gift-card';
-
-    const thumb = document.createElement('div');
-    thumb.className = 'thumb';
-    const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.alt = g.item;
-    img.src = g.foto;
-    img.referrerPolicy = 'no-referrer';
-    const fallback = document.createElement('div');
-    fallback.className = 'fallback';
-    fallback.textContent = g.item;
-    fallback.style.display = 'none';
-    img.onerror = function(){ img.style.display='none'; fallback.style.display='flex'; };
-    thumb.appendChild(img);
-    thumb.appendChild(fallback);
-
-    const body = document.createElement('div');
-    body.className = 'body';
-    const name = document.createElement('div');
-    name.className = 'name';
-    name.textContent = g.item;
-    const price = document.createElement('div');
-    price.className = 'price';
-    price.textContent = brl(g.valor);
-
-    const actions = document.createElement('div');
-    actions.className = 'gift-actions';
-    const btnPix = document.createElement('button');
-    btnPix.className = 'btn-pix';
-    btnPix.textContent = 'Pix';
-    btnPix.onclick = copyPix;
-    const btnWpp = document.createElement('button');
-    btnWpp.className = 'btn-wpp';
-    btnWpp.textContent = 'Cartão';
-    btnWpp.onclick = function(){ payCard(g.item, g.valor); };
-    actions.appendChild(btnPix);
-    actions.appendChild(btnWpp);
-
-    body.appendChild(name);
-    body.appendChild(price);
-    body.appendChild(actions);
-    card.appendChild(thumb);
-    card.appendChild(body);
-    grid.appendChild(card);
-  });
-
-  block.appendChild(grid);
-  roomsEl.appendChild(block);
-});
 
 // Countdown
 const weddingDate = new Date("2026-12-28T00:00:00-03:00").getTime();
@@ -676,5 +605,7 @@ function tickCountdown(){
 tickCountdown();
 setInterval(tickCountdown, 1000);
 </script>
+<script src="gift-catalog.js" defer></script>
+<script src="gift-registry.js" defer></script>
 </body>
 </html>
