@@ -33,14 +33,14 @@ async function notify(pledge){
  'Presente: '+pledge.item_sku,'Presenteador: '+pledge.donor_name,
  'E-mail: '+pledge.donor_email,'Mensagem: '+(pledge.message||'(nenhuma)'),
  'Tipo: '+pledge.gift_mode,'Valor: R$ '+(pledge.base_cents/100).toFixed(2),
- 'Extra: R$ '+(pledge.extra_cents/100).toFixed(2),'Pedido: '+pledge.id].join('\\n');
+ 'Extra: R$ '+(pledge.extra_cents/100).toFixed(2),'Pedido: '+pledge.id].join('\n');
  const guestText=['Olá, '+pledge.donor_name+'!',
  'Obrigado por fazer parte do casamento de Victória & Levi.',
  'Seu presente foi '+done+': '+pledge.item_sku+'.',
  pledge.gift_mode==='physical'
  ?'Sua reserva física está confirmada. Você se comprometeu a entregar uma unidade do presente.'
  :'Recebemos a confirmação do pagamento pela InfinitePay.',
- 'Pedido: '+pledge.id,'Mensagem aos noivos: '+(pledge.message||'(não informada)')].join('\\n');
+ 'Pedido: '+pledge.id,'Mensagem aos noivos: '+(pledge.message||'(não informada)')].join('\n');
  let adminOk=Boolean(pledge.notified_at),donorOk=Boolean(pledge.donor_notified_at);
  if(!adminOk){
    adminOk=await sendMail(TO,subject,adminText);
