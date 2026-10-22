@@ -1,0 +1,36 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Presentes · Administração | Victória & Levi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#101d32;--gold:#b99b54;--bg:#f7f7f4;--line:#dce1e7}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--navy);font:14px 'DM Sans',sans-serif}
+header{background:var(--navy);color:#fff;border-bottom:3px solid var(--gold);padding:20px clamp(18px,4vw,56px);display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1,h2{font-family:'Playfair Display',Georgia,serif}h1{font-size:26px;margin:0}h2{font-size:21px}
+main{max-width:1250px;margin:34px auto;padding:0 20px}a{color:inherit}
+button{cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+.btn{background:var(--navy);color:#fff;border:0;border-radius:7px;padding:12px 18px;font:700 13px 'DM Sans',sans-serif}
+.btn.outline{background:white;color:var(--navy);border:1px solid var(--line)}
+.panel{background:white;border:1px solid var(--line);padding:24px;border-radius:15px;box-shadow:0 10px 28px #101d3208;margin-bottom:20px}
+.login{max-width:490px;margin:9vh auto}form{display:grid;gap:15px}input{border:1px solid #cbd2d9;border-radius:7px;padding:12px;font:inherit;width:100%}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:19px}
+.stat{background:white;border:1px solid var(--line);padding:18px;border-radius:12px}.stat small{display:block;color:#6f7985;margin-bottom:8px}.stat strong{font-size:25px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.table{overflow:auto}table{border-collapse:collapse;width:100%;min-width:930px;font-size:13px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f3f5f8;text-transform:uppercase;font-size:10px;letter-spacing:.08em}
+.badge{display:inline-block;border-radius:20px;padding:5px 8px;font-size:11px;font-weight:700;background:#f1ede5}
+.badge.paid{background:#dff4e8;color:#126a45}.badge.reserved{background:#f8eccd;color:#76540d}.badge.awaiting_payment{background:#e9eef6;color:#425d79}.badge.cancelled{background:#ffe1e1;color:#9d3333}
+.muted{color:#748193}.actions{display:flex;gap:6px}.actions button{border:1px solid var(--line);background:white;border-radius:5px;padding:6px 8px;font-size:11px}
+#error{color:#aa303a;font-weight:600;white-space:pre-wrap}#notice{color:#445f6e} [hidden]{display:none!important}
+@media(max-width:740px){.stats{grid-template-columns:repeat(2,1fr)}header{flex-wrap:wrap}.panel{padding:18px}}
+</style></head><body>
+<header><div><div style="font-size:11px;letter-spacing:.19em;color:#ddc992">ACESSO RESTRITO</div><h1>Presentes · Administração</h1></div><div><a href="/index.html" style="margin-right:14px">Ver site</a><button class="btn outline" id="logout" hidden>Sair</button></div></header>
+<main>
+<section id="login" class="panel login"><h2>Entrar como administrador</h2><p>Use o mesmo e-mail autorizado na gestão dos convidados. O acesso aos nomes e às mensagens é protegido no servidor.</p><form id="auth-form"><label>E-mail cadastrado<input id="auth-email" type="email" autocomplete="email" required placeholder="Seu e-mail de administrador"></label><button type="submit" class="btn">Receber link de acesso</button></form><p id="notice" role="status"></p></section>
+<section id="dashboard" hidden>
+<div class="stats"><div class="stat"><small>Presentes físicos reservados</small><strong id="st-physical">0</strong></div><div class="stat"><small>Pagamentos confirmados</small><strong id="st-paid">0</strong></div><div class="stat"><small>Aguardando pagamento</small><strong id="st-awaiting">0</strong></div><div class="stat"><small>Total financeiro confirmado</small><strong id="st-value">R$ 0</strong></div></div>
+<div class="panel"><div class="toolbar"><div><h2 style="margin:0">Quem presenteou</h2><p class="muted">Nomes, mensagens, valores extras e situação de cada compromisso.</p></div><button class="btn" id="refresh">Atualizar</button></div>
+<div class="toolbar"><input id="search" type="search" placeholder="Buscar nome, presente ou e-mail" style="max-width:380px"><button id="download" type="button" class="btn outline">Exportar CSV</button></div>
+<p id="error" role="alert"></p>
+<div class="table"><table><thead><tr><th>Data</th><th>Presente</th><th>Presenteador</th><th>Modalidade</th><th>Status</th><th>Valor / Extra</th><th>Mensagem</th><th>Ações</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+</section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+<script src="/wedding-config.js"></script><script src="/gift-admin.js" defer></script>
+</body></html>
