@@ -45,7 +45,7 @@ try{
 const origin=new URL(SITE);if(origin.protocol!=='https:')throw fail('GIFT_SITE_ORIGIN deve usar HTTPS',503);
 const redirect=new URL('/index.html',origin);redirect.searchParams.set('gift_order',r.id);
 const webhook=new URL('/api/gifts?action=webhook',origin);
-const data={handle:HANDLE,order_nsu:r.id,redirect_url:redirect.href,items:[{quantity:1,price:r.amount_cents,description:'Presente casamento: '+String(r.title).slice(0,80)}],single_payment:true,valid_until:new Date(Date.now()+30*60000).toISOString(),webhook:{url:webhook.href,events:['paid','refunded','canceled']},customer:{name,email}};
+const data={handle:HANDLE,order_nsu:r.id,redirect_url:redirect.href,items:[{quantity:1,price:r.amount_cents,description:'Presente casamento: '+String(r.title).slice(0,80)}],options:{single_payment:true,valid_until:new Date(Date.now()+30*60000).toISOString(),payment_methods_enabled:['credit_card','pix'],assured_installments:0},webhook:{url:webhook.href,events:['paid','refunded','canceled']},customer:{name,email}};
 const response=await fetch('https://api.checkout.infinitepay.io/links',{method:'POST',headers:{'X-Api-Key':IP_KEY,'Content-Type':'application/json'},body:JSON.stringify(data)});if(!response.ok)throw fail('Não foi possível criar o link InfinitePay.',502);const result=await response.json();const checkout=result.url||result.checkout_url||result.link||result.data?.url;if(typeof checkout!=='string'||!checkout.startsWith('https://'))throw fail('Checkout não retornou link válido.',502);await rpc('wedding_gift_set_checkout',{p_id:r.id,p_url:checkout});return json(res,200,{checkout_url:checkout,pledge_id:r.id})
 }catch(e){await rpc('wedding_gift_cancel',{p_id:r.id}).catch(()=>{});throw e}}
 if(action==='verify'&&req.method==='GET'){
