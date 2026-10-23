@@ -76,8 +76,12 @@ try{
 const origin=new URL(SITE);if(origin.protocol!=='https:')throw fail('GIFT_SITE_ORIGIN deve usar HTTPS',503);
 const redirect=new URL('/index.html',origin);redirect.searchParams.set('gift_order',r.id);
 const webhook=new URL('/api/gifts?action=webhook',origin);
-const data={handle:HANDLE,order_nsu:r.id,redirect_url:redirect.href,items:[{quantity:1,price:r.amount_cents,description:'Presente casamento: '+String(r.title).slice(0,80)}],options:{single_payment:true,valid_until:new Date(Date.now()+30*60000).toISOString(),payment_methods_enabled:['credit_card','pix'],assured_installments:0},webhook_url:webhook.href,customer:{name,email}};
-const response=await fetch('https://api.checkout.infinitepay.io/links',{method:'POST',headers:{...(IP_KEY?{'X-Api-Key':IP_KEY}:{}),'Content-Type':'application/json'},body:JSON.stringify(data)});if(!response.ok){console.error('InfinitePay create link status:',response.status);throw fail('Não foi possível criar o link InfinitePay.',502);}const result=await response.json();const checkout=result.url||result.checkout_url||result.link||result.data?.url;if(typeof checkout!=='string'||!checkout.startsWith('https://'))throw fail('Checkout não retornou link válido.',502);await rpc('wedding_gift_set_checkout',{p_id:r.id,p_url:checkout});return json(res,200,{checkout_url:checkout,pledge_id:r.id})
+// Sem X-Api-Key, a InfinitePay aceita somente o checkout integrado básico pela InfiniteTag.
+const data={handle:HANDLE,order_nsu:r.id,redirect_url:redirect.href,
+items:[{quantity:1,price:r.amount_cents,description:'Presente casamento: '+String(r.title).slice(0,80)}],
+webhook_url:webhook.href,customer:{name,email}};
+if(IP_KEY){data.options={single_payment:true,valid_until:new Date(Date.now()+30*60000).toISOString(),payment_methods_enabled:['credit_card','pix'],assured_installments:0};}
+const response=await fetch('https://api.checkout.infinitepay.io/links',{method:'POST',headers:{...(IP_KEY?{'X-Api-Key':IP_KEY}:{}),'Content-Type':'application/json'},body:JSON.stringify(data)});if(!response.ok){console.error('InfinitePay create link status:',response.status);throw fail('Checkout InfinitePay indisponível. Verifique se o Checkout Integrado está habilitado na conta pessoal e se a InfiniteTag está correta.',502);}const result=await response.json();const checkout=result.url||result.checkout_url||result.link||result.data?.url;if(typeof checkout!=='string'||!checkout.startsWith('https://'))throw fail('Checkout não retornou link válido.',502);await rpc('wedding_gift_set_checkout',{p_id:r.id,p_url:checkout});return json(res,200,{checkout_url:checkout,pledge_id:r.id})
 }catch(e){await rpc('wedding_gift_cancel',{p_id:r.id}).catch(()=>{});throw e}}
 if(action==='verify'&&req.method==='GET'){
 const id=url.searchParams.get('order_nsu');const p=await pledgeOf(id);if(!p||p.gift_mode!=='value')throw fail('Pedido não encontrado',404);const transaction=url.searchParams.get('transaction_nsu'),slug=url.searchParams.get('slug');if(p.status==='paid')return json(res,200,{paid:true});if(!transaction||!slug)return json(res,200,{paid:false});const result=await checkPayment(p,transaction,slug);return json(res,200,result)}
@@ -93,6 +97,6 @@ await authenticateAdmin(req);const b=await bodyOf(req),p=await pledgeOf(b.id);if
 if(action==='retry-notification'&&req.method==='POST'){
 await authenticateAdmin(req);const b=await bodyOf(req),p=await pledgeOf(b.id);if(!p||!['reserved','paid'].includes(p.status))throw fail('Compromisso inválido');return json(res,200,{sent:await notify(p)})}
 return json(res,404,{error:'Rota não encontrada'});
-}catch(e){console.error('Wedding gift error:',e.message);return json(res,e.status||500,{error:e.status&&e.status<500?e.message:'Serviço de presentes indisponível no momento.'})}
+}catch(e){console.error('Wedding gift error:',e.message);return json(res,e.status||500,{error:e.status&&e.status<=502&&e.status>=400?e.message:'Serviço de presentes indisponível no momento.'})}
 }
 export default handler;
