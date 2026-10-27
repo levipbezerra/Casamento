@@ -4,8 +4,8 @@
 const $=id=>document.getElementById(id);
 const source=Array.isArray(window.WEDDING_GIFT_CATALOG)?window.WEDDING_GIFT_CATALOG:[];
 const money=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
-const rooms=['Cozinha','Quarto','Sala','Banheiro','Lavanderia','Varanda'];
-const labels={Cozinha:'Cozinha',Quarto:'Quarto',Sala:'Sala de Estar',Banheiro:'Banheiro',Lavanderia:'Lavanderia',Varanda:'Varanda'};
+const rooms=['Outros','Cozinha','Quarto','Sala','Banheiro','Lavanderia','Varanda'];
+const labels={Outros:'Outros',Cozinha:'Cozinha',Quarto:'Quarto',Sala:'Sala de Estar',Banheiro:'Banheiro',Lavanderia:'Lavanderia',Varanda:'Varanda'};
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 function distance(a,b){const p=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=p[0];p[0]=i;for(let j=1;j<=b.length;j++){const v=p[j];p[j]=Math.min(p[j]+1,p[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=v}}return p[b.length]}
 function score(item,query){const title=norm(item);if(title.includes(query))return 100-(title.indexOf(query)/20);const terms=title.split(' '),qs=query.split(' ');let count=0;for(const q of qs){let best=0;for(const word of terms){if(word.startsWith(q))best=Math.max(best,9);else if(q.length>=4&&distance(q,word)<=Math.max(1,Math.floor(q.length*.34)))best=Math.max(best,7)}count+=best}return count>=7*qs.length?count:0}
