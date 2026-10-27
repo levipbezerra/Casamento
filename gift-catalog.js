@@ -1,6 +1,127 @@
 // Aba CASA da planilha 404.SFN; quantity=null representa ∞.
 window.WEDDING_GIFT_CATALOG=[
   {
+    "sku": "CASA-054",
+    "ambiente": "Outros",
+    "item": "LENÇOS PARA A NOIVA NÃO BORRAR TODA A MAQUIAGEM",
+    "valor": 50,
+    "price_cents": 5000,
+    "foto": "https://i.pinimg.com/1200x/a8/08/0f/a8080f6100c083aa86acd4d22869e9d5.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-055",
+    "ambiente": "Outros",
+    "item": "POLTRONA CONFORTÁVEL PARA O NOIVO ESPERAR A NOIVA",
+    "valor": 120,
+    "price_cents": 12000,
+    "foto": "https://i.pinimg.com/1200x/77/a4/a6/77a4a66b32867aaf252ab85018ed95bb.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-056",
+    "ambiente": "Outros",
+    "item": "ROLO DE MACARRÃO CASO O NOIVO ESTRESSE A NOIVA",
+    "valor": 60,
+    "price_cents": 6000,
+    "foto": "https://i.pinimg.com/736x/4e/71/f8/4e71f8f32bed9f8f152d60f073f9f3da.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-057",
+    "ambiente": "Outros",
+    "item": "CAPACETE ANTI-ROLO DE MACARRÃO PARA O NOIVO",
+    "valor": 255,
+    "price_cents": 25500,
+    "foto": "https://i.pinimg.com/1200x/a5/ed/eb/a5edebccde621b00be5974f4f424ab68.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-058",
+    "ambiente": "Outros",
+    "item": "TAXA PARA DAR PITACO NA FESTA",
+    "valor": 5000,
+    "price_cents": 500000,
+    "foto": "https://i.pinimg.com/736x/98/42/12/984212f3df42ec06a13633eb302cacc4.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-059",
+    "ambiente": "Outros",
+    "item": "COTA LUA DE MEL",
+    "valor": 400,
+    "price_cents": 40000,
+    "foto": "https://i.pinimg.com/736x/a0/5c/cb/a05ccbb6ea2f511afdab3159d8228174.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-060",
+    "ambiente": "Outros",
+    "item": "TAXA PARA A NOIVA JOGAR O BUQUÊ NA SUA MÃO",
+    "valor": 200,
+    "price_cents": 20000,
+    "foto": "https://i.pinimg.com/736x/fc/79/7b/fc797bec9ab322a919fa8355a54f57ef.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-061",
+    "ambiente": "Outros",
+    "item": "TAXA PARA PERGUNTAR O QUE QUISER SOBRE A LUA DE MEL (18+)",
+    "valor": 1000,
+    "price_cents": 100000,
+    "foto": "https://i.pinimg.com/736x/c3/7e/1a/c37e1a6120e1fabd8f40345eb3e10e39.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-062",
+    "ambiente": "Outros",
+    "item": "1 ANO DE NETFLIX",
+    "valor": 850,
+    "price_cents": 85000,
+    "foto": "https://i.pinimg.com/236x/d0/fd/0e/d0fd0e3c5067a717dfc02c164bb94d21.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-063",
+    "ambiente": "Outros",
+    "item": "RIVOTRIL PRA NOIVA NO DIA DO CASAMENTO",
+    "valor": 100,
+    "price_cents": 10000,
+    "foto": "https://i.pinimg.com/1200x/39/6a/a0/396aa061a6918009201495ddfffb3e93.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
+    "sku": "CASA-064",
+    "ambiente": "Outros",
+    "item": "PATROCÍNIO DA TRILHA SONORA DA LUA DE MEL",
+    "valor": 360,
+    "price_cents": 36000,
+    "foto": "https://i.pinimg.com/736x/34/ce/94/34ce94267e937f9287f0e07b728dfd3b.jpg",
+    "physical_allowed": false,
+    "quantity": 0,
+    "reference_url": null
+  },
+  {
     "sku": "CASA-001",
     "ambiente": "Banheiro",
     "item": "ESPELHO",
