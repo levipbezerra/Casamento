@@ -298,46 +298,143 @@ async function handleStaffAction(ev){
   else result=await api.from('wedding_staff').update({active:!s.active}).eq('email',s.email);
   if(result.error)return failed(result.error);toast('Permissão atualizada.');await loadStaff();
 }
-const headerLookup=(r,...keys)=>{
-  for(const k of keys){if(Object.prototype.hasOwnProperty.call(r,k))return r[k]}
-  const m=Object.fromEntries(Object.entries(r).map(([k,v])=>[k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(),v]));
-  for(const k of keys){const normalized=k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();if(Object.prototype.hasOwnProperty.call(m,normalized))return m[normalized]}
-  return '';
-};
-function boolFromCell(v){return v===true||v===1||['true','verdadeiro','sim','1','yes'].includes(String(v).trim().toLowerCase())}
+// Importação de planilhas completas: separa a lista principal do bloco de equipe.
+// O campo N não é identidade. Nunca transferir QR Codes com base no N isoladamente.
+const normalizeHeader=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLocaleLowerCase('pt-BR');
+const identityKey=s=>normalizeHeader(s).replace(/[^a-z0-9]+/g,' ').trim();
+const firstNameKey=s=>identityKey(s).replace(/^(tia|tio|pr|pastor|pastora) /,'').split(' ')[0];
+function boolFromCell(v){return v===true||v===1||['true','verdadeiro','sim','1','yes','ok'].includes(String(v).trim().toLowerCase())}
+function parseGuestWorkbook(workbook){
+  const sheet=workbook.Sheets[workbook.SheetNames[0]];
+  const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true});
+  const headers=(matrix[0]||[]).map(normalizeHeader);
+  const col=(...names)=>headers.findIndex(h=>names.includes(h));
+  const nc=col('n','nº','numero','legacy_number'),namec=col('nome','name'),typec=col('tipo','guest_type');
+  const okc=col('ok','list_ok'),invitec=col('convites enviados','invitation_status');
+  const rsvpc=col('presenca confirmada','rsvp_status');
+  if(nc<0||namec<0||typec<0)throw Error('A planilha precisa ter as colunas N, NOME e TIPO.');
+  const records=[],seen=new Set();
+  let divider=false,support=false,ignored=0,lastNum=0;
+  for(const line of matrix.slice(1)){
+    const n=Number(line[nc]),name=String(line[namec]??'').trim();
+    if(!name||!Number.isInteger(n)||n<1){if(records.length)divider=true;continue}
+    if(!support&&divider&&n<=lastNum){support=true}
+    if(support){ignored++;continue}
+    if(seen.has(n))throw Error('O número '+n+' aparece duas vezes no bloco principal.');
+    if(n<=lastNum)throw Error('A numeração da lista principal não está em ordem. Confira a planilha.');
+    const guest_type=String(line[typec]||'Convidado').trim();
+    if(name.length>180||guest_type.length>70)throw Error('Nome ou tipo excede o limite no número '+n);
+    const item={legacy_number:n,name,guest_type,list_ok:okc<0?false:boolFromCell(line[okc]),
+      invitation_status:invitec<0?'':String(line[invitec]??'').trim()};
+    if(rsvpc>=0)item.rsvp_status=String(line[rsvpc]??'').trim();
+    records.push(item);seen.add(n);lastNum=n;divider=false;
+  }
+  if(!records.length)throw Error('Nenhum convidado válido foi localizado no primeiro bloco.');
+  return {records,ignored};
+}
+function reconcileGuests(rows,current){
+  const used=new Set(),matched=[],added=[];
+  const result=[];
+  const findCandidate=row=>{
+    let pool=current.filter(g=>!used.has(g.id)&&identityKey(g.name)===identityKey(row.name));
+    if(pool.length!==1){
+      // Somente apelido ↔ nome ampliado quando há um candidato único no mesmo tipo.
+      pool=current.filter(g=>!used.has(g.id)&&g.guest_type===row.guest_type&&
+        firstNameKey(g.name)===firstNameKey(row.name)&&firstNameKey(row.name).length>=3);
+    }
+    return pool.length===1?pool[0]:null;
+  };
+  for(const row of rows){
+    const old=findCandidate(row);
+    if(old){
+      used.add(old.id);
+      // Ausência de coluna de presença confirmada não apaga RSVP já registrado.
+      matched.push({...row,id:old.id,...(!Object.hasOwn(row,'rsvp_status')?{rsvp_status:old.rsvp_status}:{} )});
+    }else{
+      added.push(row);
+    }
+    result.push({row,old});
+  }
+  const removed=current.filter(g=>!used.has(g.id));
+  return {matched,added,removed,result};
+}
+function privateBackup(list){
+  const cols=['id','legacy_number','name','guest_type','list_ok','invitation_status','rsvp_status','notes','qr_token','checked_in_at'];
+  const data=[cols.join(';')].concat(list.map(g=>cols.map(k=>'"'+String(g[k]??'').replace(/"/g,'""')+'"').join(';'))).join('\r\n');
+  const url=URL.createObjectURL(new Blob(['\ufeff'+data],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='BACKUP-PRIVADO-LeVih-antes-da-importacao.csv';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
 async function importSheet(){
-  const file=$('import-file').files[0];if(!file){return toast('Selecione uma planilha antes de importar.',true)}
-  if(!window.XLSX){return toast('Biblioteca de Excel não carregada. Verifique sua conexão.',true)}
-  const button=$('start-import');button.disabled=true;button.textContent='Importando…';
+  const file=$('import-file').files[0];
+  if(!file)return toast('Selecione a planilha atualizada antes de importar.',true);
+  if(!window.XLSX)return toast('Leitor Excel indisponível. Verifique sua conexão.',true);
+  const button=$('start-import');button.disabled=true;button.textContent='Conferindo a planilha…';
+  const summary=$('import-summary');
   try{
     const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:false});
-    const first=workbook.Sheets[workbook.SheetNames[0]];
-    const raw=XLSX.utils.sheet_to_json(first,{defval:'',raw:true});
-    const normalized=raw.map(r=>{
-      const num=headerLookup(r,'legacy_number','N','Nº');
-      const name=String(headerLookup(r,'name','NOME')).trim();
-      const guest_type=String(headerLookup(r,'guest_type','TIPO')||'Convidado').trim();
-      const list_ok=boolFromCell(headerLookup(r,'list_ok','OK'));
-      const invitation_status=String(headerLookup(r,'invitation_status','CONVITES ENVIADOS')||'').trim();
-      const rsvp_status=String(headerLookup(r,'rsvp_status','PRESENÇA CONFIRMADA')||'').trim();
-      if(!name)return null;
-      return {legacy_number:Number(num)>0?Number(num):null,name,guest_type,list_ok,invitation_status,rsvp_status};
-    }).filter(Boolean);
-    if(!normalized.length)throw Error('Nenhum convidado encontrado. Verifique os cabeçalhos.');
-    const uniqueNumbers=new Set(normalized.filter(g=>g.legacy_number).map(g=>g.legacy_number));
-    if(uniqueNumbers.size!==normalized.filter(g=>g.legacy_number).length)throw Error('Há números N duplicados na planilha. Corrija antes de importar.');
-    if(!confirm('Importar '+normalized.length+' convidados? Convidados de número já existente serão atualizados, mantendo seu QR Code.'))return;
-    for(let pos=0;pos<normalized.length;pos+=50){
-      const chunk=normalized.slice(pos,pos+50);
-      const numbered=chunk.filter(r=>r.legacy_number!==null);
-      const unnumbered=chunk.filter(r=>r.legacy_number===null);
-      if(numbered.length){const {error}=await api.from('wedding_guests').upsert(numbered,{onConflict:'legacy_number'});if(error)throw error}
-      if(unnumbered.length){const {error}=await api.from('wedding_guests').insert(unnumbered);if(error)throw error}
-      $('import-summary').textContent=Math.min(pos+50,normalized.length)+' de '+normalized.length+' importados.';
+    const {records,ignored}=parseGuestWorkbook(workbook);
+    // Busca estado atual imediatamente antes da sincronização.
+    const existing=[];for(let start=0;;start+=1000){
+      const {data,error}=await api.from('wedding_guests').select('*').order('name').range(start,start+999);
+      if(error)throw error;
+      existing.push(...data);if(data.length<1000)break;
     }
-    toast(normalized.length+' convidados importados com sucesso.');await loadGuests();switchTab('guests');
-  }catch(e){failed(e)}finally{button.disabled=false;button.textContent='Importar para a lista'}
+    const plan=reconcileGuests(records,existing);
+    if(plan.removed.some(g=>g.checked_in_at))
+      throw Error('Há entradas já registradas em pessoas fora da nova lista. Desfaça essas entradas antes de substituir a relação.');
+    const details='LISTA PRINCIPAL: '+records.length+' convidados\n'+
+      'QR Codes preservados por identidade: '+plan.matched.length+'\n'+
+      'Novos QR Codes necessários: '+plan.added.length+'\n'+
+      'Registros antigos fora da lista: '+plan.removed.length+'\n'+
+      'Equipe no segundo bloco (não importada): '+ignored+'\n\n'+
+      'A numeração será atualizada, as pessoas ausentes serão retiradas e '+
+      'o sistema baixará um backup privado antes da alteração. '+
+      'Registros sem correspondência única terão um NOVO QR Code.\n\nConfirmar sincronização?';
+    summary.textContent='Prévia: '+records.length+' convidados; '+plan.matched.length+' QR Codes preservados; '+
+      plan.added.length+' novos; '+plan.removed.length+' removidos; '+ignored+' da equipe separados.';
+    if(!confirm(details))return;
+    privateBackup(existing);
+    button.textContent='Sincronizando convidados…';
+    // Libera números antigos antes de reagrupar, sem jamais trocar IDs/tokens entre pessoas.
+    for(let i=0;i<existing.length;i+=40){
+      const slice=existing.slice(i,i+40);
+      const {error}=await api.from('wedding_guests').update({legacy_number:null}).in('id',slice.map(g=>g.id));
+      if(error)throw error;
+    }
+    for(let i=0;i<plan.matched.length;i+=25){
+      const payload=plan.matched.slice(i,i+25);
+      const {error}=await api.from('wedding_guests').upsert(payload,{onConflict:'id'});
+      if(error)throw error;
+      summary.textContent='Atualizados: '+Math.min(i+25,plan.matched.length)+' de '+plan.matched.length;
+    }
+    for(let i=0;i<plan.added.length;i+=25){
+      const {error}=await api.from('wedding_guests').insert(plan.added.slice(i,i+25));
+      if(error)throw error;
+    }
+    for(let i=0;i<plan.removed.length;i+=40){
+      const {error}=await api.from('wedding_guests').delete().in('id',plan.removed.slice(i,i+40).map(g=>g.id));
+      if(error)throw error;
+    }
+    await loadGuests();
+    const actualByNumber=new Map(guests.map(g=>[g.legacy_number,g]));
+    if(guests.length!==records.length||records.some(x=>!actualByNumber.has(x.legacy_number)||
+      actualByNumber.get(x.legacy_number).name!==x.name||
+      actualByNumber.get(x.legacy_number).guest_type!==x.guest_type)){
+      throw Error('Os dados gravados não coincidem com a planilha. Confira o painel e execute novamente a importação.');
+    }
+    summary.textContent='Sincronização conferida: '+guests.length+' convidados, '+plan.matched.length+
+      ' QR Codes preservados e '+plan.added.length+' novos. '+ignored+' registros de apoio ignorados.';
+    toast('A lista foi atualizada e conferida com '+guests.length+' convidados.');
+    switchTab('guests');
+  }catch(e){
+    failed(e);
+    summary.textContent='Sincronização não concluída. '+(e.message||'Confira os registros e tente importar novamente.');
+  }finally{
+    button.disabled=false;button.textContent='Conferir e sincronizar lista';
+  }
 }
+
 function exportCsv(){
   if(!guests.length)return toast('Não há dados para exportar.',true);
   const keys=['legacy_number','name','guest_type','list_ok','invitation_status','rsvp_status','notes','checked_in_at'];
