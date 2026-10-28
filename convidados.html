@@ -50,9 +50,9 @@
 
 <div id="files-view" hidden>
 <div class="split">
-<div class="panel"><h2>Importar convidados</h2><p class="subtle">Carregue a planilha original ou o CSV preparado. Os campos de origem “CASAL” são ignorados; apenas o tipo do convidado será mostrado.</p>
-<div class="file-box"><input type="file" id="import-file" accept=".xlsx,.xls,.csv,text/csv"><p class="subtle">.xlsx · .xls · .csv</p><button class="btn gold" id="start-import" type="button">Importar para a lista</button></div>
-<div class="note">Registros com o mesmo número original são atualizados, preservando seu QR Code e o histórico de check-in. Confira a lista antes de importar uma atualização.</div></div>
+<div class="panel"><h2>Importar convidados</h2><p class="subtle">Sincronize a lista principal do casamento com a planilha mais recente. O segundo bloco, de equipe de apoio, não será contabilizado como convidado. O campo “CASAL” é ignorado.</p>
+<div class="file-box"><input type="file" id="import-file" accept=".xlsx,.xls,.csv,text/csv"><p class="subtle">.xlsx · .xls · .csv</p><button class="btn gold" id="start-import" type="button">Conferir e sincronizar lista</button></div>
+<div class="note">O número da planilha não identifica uma pessoa. O sistema compara os nomes e categorias antes de reutilizar um QR Code; registros sem correspondência única recebem QR novo. Será apresentado um resumo, solicitada sua confirmação e feito backup privado antes da substituição. Se a operação for interrompida, importe a mesma planilha novamente.</div></div>
 <div class="panel"><h2>Exportar lista</h2><p class="subtle">Baixe uma cópia privada para seu computador. Não compartilhe este arquivo em locais públicos.</p>
 <div class="header-actions"><button class="btn outline" id="export-list" type="button">Baixar CSV atualizado</button><button class="btn gold" id="export-qrs" type="button">Baixar todos os QR Codes (.ZIP)</button></div><p class="subtle" id="import-summary"></p><p class="subtle" id="qr-export-progress" aria-live="polite">Os QR Codes são gerados somente no seu navegador autenticado.</p></div></div>
 </div>
