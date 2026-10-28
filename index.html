@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Victória & Levi &mdash; 28.12.2026</title>
+<!-- Supabase pode retornar à URL inicial quando a rota privada não está autorizada.
+     Encaminha somente callbacks de Auth; nenhuma alteração na lista de presentes. -->
+<script>
+(function(){
+  const fragment=new URLSearchParams(window.location.hash.slice(1));
+  const query=new URLSearchParams(window.location.search);
+  const isAuthReturn=fragment.has('access_token')||
+    fragment.has('error_code')||fragment.has('error')||
+    (query.has('code')&&String(query.get('code')).length>15);
+  if(isAuthReturn){
+    window.location.replace(window.location.origin+'/wedding-auth-return.html'+window.location.search+window.location.hash);
+  }
+})();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
