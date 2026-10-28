@@ -56,6 +56,7 @@ async function requestMagicLink(ev){
   $('auth-message').textContent='Enviando link de acesso…';
   try{
     const redirect=window.location.origin+window.location.pathname;
+    try{localStorage.setItem('levih-login-intent',JSON.stringify({page:PAGE,time:Date.now()}))}catch(_){}
     const {error}=await api.auth.signInWithOtp({email,options:{emailRedirectTo:redirect,shouldCreateUser:true}});
     if(error)throw error;
     $('auth-message').textContent='Verifique sua caixa de entrada. Abra o link neste dispositivo para acessar.';
