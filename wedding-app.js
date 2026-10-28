@@ -21,17 +21,28 @@ function failed(error,fallback='Não foi possível concluir a operação.'){
   toast(error?.message||fallback,true);
 }
 function setViewAuth(isLogged){
-  $('auth-shell').hidden=isLogged;$('app-shell').hidden=!isLogged;$('logout-btn').hidden=!isLogged;
+  $('auth-shell').hidden=isLogged;$('app-shell').hidden=!isLogged;
+  $('logout-btn').hidden=!isLogged;$('change-password-btn').hidden=!isLogged;
+  if(!isLogged)$('password-modal').hidden=true;
   if(!isLogged&&$('account-label'))$('account-label').textContent=PAGE==='admin'?'Gestão dos convidados':'Check-in de convidados';
 }
 function missingSetup(){
   $('auth-message').textContent='A base de dados ainda não foi configurada. O administrador deve executar database/wedding-setup.sql e revisar wedding-config.js.';
   $('auth-message').style.color='#a53f49';
   $('auth-form').querySelector('button').disabled=true;
+  $('password-form').querySelector('button').disabled=true;
 }
 async function init(){
   setViewAuth(false);
   $('auth-form').addEventListener('submit',requestMagicLink);
+  $('password-form').addEventListener('submit',signInPassword);
+  $('auth-tab-password').addEventListener('click',()=>setAuthMethod('password'));
+  $('auth-tab-link').addEventListener('click',()=>setAuthMethod('link'));
+  $('change-password-btn').addEventListener('click',()=>{$('password-modal').hidden=false;$('new-password').focus()});
+  $('close-password-modal').addEventListener('click',closePasswordModal);
+  $('cancel-password-modal').addEventListener('click',closePasswordModal);
+  $('update-password-form').addEventListener('submit',updatePassword);
+  setAuthMethod('password');
   $('logout-btn').addEventListener('click',async()=>{
     if(scanner)await stopCamera();
     await api?.auth.signOut();currentUser=null;role=null;setViewAuth(false);
@@ -43,9 +54,77 @@ async function init(){
   api.auth.onAuthStateChange((event,session)=>{
     if(event==='SIGNED_OUT'){currentUser=null;role=null;setViewAuth(false);return}
     if(event==='SIGNED_IN'&&session?.user&&session.user.id!==currentUser?.id){
-      setTimeout(()=>restore(session.user),0);
+      setTimeout(()=>{if(session.user.id!==currentUser?.id)restore(session.user)},0);
     }
   });
+}
+
+function setAuthMethod(method){
+  const password=method==='password';
+  // Carry the typed e-mail between login methods without storing credentials.
+  const from=$(password?'auth-email':'password-email'),to=$(password?'password-email':'auth-email');
+  if(!to.value&&from.value)to.value=from.value;
+  $('password-form').hidden=!password;
+  $('auth-form').hidden=password;
+  $('auth-tab-password').classList.toggle('active',password);
+  $('auth-tab-link').classList.toggle('active',!password);
+  $('auth-tab-password').setAttribute('aria-selected',String(password));
+  $('auth-tab-link').setAttribute('aria-selected',String(!password));
+  $('auth-message').textContent=password?
+    'Entre com a senha da sua conta. Não é necessário solicitar um e-mail.':
+    'O link é uma alternativa e pode estar sujeito ao limite de envio do Supabase.';
+}
+async function signInPassword(event){
+  event.preventDefault();
+  if(!api){missingSetup();return}
+  const email=$('password-email').value.trim().toLowerCase();
+  const password=$('password-secret').value;
+  const button=event.currentTarget.querySelector('button');
+  button.disabled=true;
+  $('auth-message').textContent='Verificando suas credenciais…';
+  try{
+    const {data,error}=await api.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    $('password-secret').value='';
+    if(!data?.user)throw Error('Não foi possível autenticar esta conta.');
+    await restore(data.user);
+  }catch(error){
+    console.error('Falha ao autenticar com senha:',error?.code||error?.name);
+    const message=String(error?.message||'').toLowerCase();
+    $('auth-message').textContent=message.includes('invalid login credentials')?
+      'E-mail ou senha inválidos. Confira a senha cadastrada ou use o link por e-mail.':
+      message.includes('rate limit')?
+      'Muitas tentativas de acesso. Aguarde o limite de segurança e tente novamente.':
+      'Falha no acesso: '+(error?.message||'tente novamente.');
+    toast($('auth-message').textContent,true);
+  }finally{button.disabled=false}
+}
+function closePasswordModal(){
+  $('password-modal').hidden=true;
+  $('update-password-form').reset();
+  $('update-password-message').textContent='Sua senha não é salva neste site.';
+}
+async function updatePassword(event){
+  event.preventDefault();
+  const password=$('new-password').value,confirmation=$('confirm-password').value,
+    current=$('current-password').value;
+  const message=$('update-password-message'),button=event.currentTarget.querySelector('button[type="submit"]');
+  if(password.length<12){message.textContent='Use pelo menos 12 caracteres.';return}
+  if(password!==confirmation){message.textContent='As senhas informadas não são iguais.';return}
+  button.disabled=true;message.textContent='Atualizando sua senha com segurança…';
+  try{
+    const update={password};
+    if(current)update.current_password=current;
+    const {error}=await api.auth.updateUser(update);
+    if(error)throw error;
+    message.textContent='Senha atualizada. Ela já pode ser usada na gestão e na portaria.';
+    $('update-password-form').reset();
+    toast('Sua senha foi atualizada.');
+    setTimeout(()=>{if(!$('password-modal').hidden)closePasswordModal()},1800);
+  }catch(error){
+    console.error('Falha ao mudar a senha:',error?.code||error?.name);
+    message.textContent='Não foi possível alterar a senha: '+(error?.message||'verifique sua sessão e tente novamente.');
+  }finally{button.disabled=false}
 }
 async function requestMagicLink(ev){
   ev.preventDefault();
@@ -57,7 +136,7 @@ async function requestMagicLink(ev){
   try{
     const redirect=window.location.origin+window.location.pathname;
     try{localStorage.setItem('levih-login-intent',JSON.stringify({page:PAGE,time:Date.now()}))}catch(_){}
-    const {error}=await api.auth.signInWithOtp({email,options:{emailRedirectTo:redirect,shouldCreateUser:true}});
+    const {error}=await api.auth.signInWithOtp({email,options:{emailRedirectTo:redirect,shouldCreateUser:false}});
     if(error)throw error;
     $('auth-message').textContent='Verifique sua caixa de entrada. Abra o link neste dispositivo para acessar.';
     toast('Link enviado. Confira seu e-mail.');
