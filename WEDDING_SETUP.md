@@ -45,6 +45,14 @@ O conector atual não oferece ajustes de **Authentication > URL Configuration** 
 - Fazer login real na administração e na portaria por uma conta autorizada. Não considere a leitura de câmera verificada até executar esse teste em dispositivo HTTPS.
 - Se o domínio `vercel.app` exigir SSO do Vercel, revisar a política de proteção do projeto para permitir acesso ao site público. Isso não substitui a autenticação privada das áreas de convidados/portaria.
 
+## Recuperação do redirecionamento de e-mail (28/10/2026)
+
+O Supabase pode ignorar o `emailRedirectTo` da área privada se o endereço não estiver na allowlist de Auth, ou se o template usar a URL inicial em vez da URL de retorno. Nesses casos, o Magic Link válido chega a `/` com `#access_token=...` (fluxo implícito) ou `?code=...` (PKCE).
+
+A página pública agora contém um handler **exclusivamente para callbacks de autenticação**. Ele encaminha o retorno para `/wedding-auth-return.html`, onde a sessão é processada pelo SDK, a autorização do e-mail é verificada em `wedding_staff`, os parâmetros sensíveis são retirados da URL e o usuário é redirecionado à área permitida. O login guarda apenas a preferência de destino (admin ou portaria), nunca nomes ou QR Codes, com validade curta. Sem callback, o site público permanece intacto.
+
+**Após essa alteração, solicite e use um NOVO Magic Link.** Links já consumidos não podem ser reutilizados. Verifique em navegador que recebe o link a mesma origem em que se inicia o login; outros navegadores podem não compartilhar sessão. Se o fluxo falhar, consulte `Authentication → URL Configuration` e os modelos de e-mail do Supabase. O fallback não substitui configuração oficial de URL nem teste real do recebimento de e-mail.
+
 ## Testes de aceite
 
 - Admin autenticado: lista dos 118 com filtros/edições, QR individual e arquivo ZIP de 118 PNGs.
