@@ -105,6 +105,7 @@ function bindAdmin(){
   $('staff-list').addEventListener('click',handleStaffAction);
   $('start-import').addEventListener('click',importSheet);
   $('export-list').addEventListener('click',exportCsv);
+   $('export-qrs').addEventListener('click',downloadAllQrs);
   $('print-qr').addEventListener('click',()=>window.print());
   $('download-qr').addEventListener('click',downloadQrCard);
   setInterval(()=>{if(currentUser&&PAGE==='admin'&&!document.hidden)loadGuests(true)},30000);
@@ -203,23 +204,72 @@ function openQr(g){
   new QRCode($('qr-box'),{text:'W26:'+g.qr_token,width:224,height:224,colorDark:'#101d32',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
   $('qr-modal').hidden=false;
 }
+function drawQrCard(qr,guest){
+  const c=document.createElement('canvas');c.width=720;c.height=910;
+  const x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,720,910);
+  x.fillStyle='#101d32';x.fillRect(0,0,720,225);
+  x.fillStyle='#c7a46a';x.fillRect(40,42,640,2);
+  x.textAlign='center';x.fillStyle='#c7a46a';x.font='24px Georgia';
+  x.fillText('V I C T Ó R I A  &  L E V I',360,103);
+  x.fillStyle='#fff';x.font='43px Georgia';x.fillText('Nossa celebração',360,168);
+  x.fillStyle='#b89355';x.font='22px Georgia';x.fillText('28 · 12 · 2026',360,279);
+  x.drawImage(qr,188,330,344,344);
+  x.fillStyle='#101d32';
+  let fontSize=34;
+  do {x.font='bold '+fontSize+'px Georgia';if(x.measureText(guest.name).width<=640)break;fontSize--}while(fontSize>18);
+  x.fillText(guest.name,360,740,640);
+  x.font='21px Arial';x.fillStyle='#7d6546';x.fillText(guest.guest_type,360,779,640);
+  x.font='16px Arial';x.fillText('Apresente este QR Code na entrada',360,845);
+  return c;
+}
+function safeName(g){
+  const name=g.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,55);
+  return String(g.legacy_number||g.id.slice(0,8)).padStart(3,'0')+'-'+name;
+}
+function downloadCanvas(canvas,filename){
+  const a=document.createElement('a');a.download=filename;a.href=canvas.toDataURL('image/png');a.click();
+}
 function downloadQrCard(){
   if(!activeQr)return;
   try{
     const qr=$('qr-box').querySelector('canvas')||$('qr-box').querySelector('img');
     if(!qr)throw Error('QR Code ainda não disponível.');
-    const c=document.createElement('canvas');c.width=720;c.height=910;const x=c.getContext('2d');
-    x.fillStyle='#ffffff';x.fillRect(0,0,720,910);
-    x.fillStyle='#101d32';x.fillRect(0,0,720,225);x.fillStyle='#c7a46a';x.fillRect(40,42,640,2);
-    x.textAlign='center';x.fillStyle='#c7a46a';x.font='24px Georgia';x.fillText('V I C T Ó R I A  &  L E V I',360,103);
-    x.fillStyle='#ffffff';x.font='43px Georgia';x.fillText('Nossa celebração',360,168);
-    x.fillStyle='#b89355';x.font='22px Georgia';x.fillText('28 · 12 · 2026',360,279);
-    x.drawImage(qr,188,330,344,344);
-    x.fillStyle='#101d32';x.font='bold 32px Georgia';x.fillText(activeQr.name.slice(0,35),360,740);
-    x.font='21px Arial';x.fillStyle='#7d6546';x.fillText(activeQr.guest_type,360,779);
-    x.font='16px Arial';x.fillText('Apresente este QR Code na entrada',360,845);
-    const a=document.createElement('a');a.download='Convite-'+activeQr.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9-]/g,'-')+'.png';a.href=c.toDataURL('image/png');a.click();
+    downloadCanvas(drawQrCard(qr,activeQr),'QR-'+safeName(activeQr)+'.png');
   }catch(e){failed(e)}
+}
+async function downloadAllQrs(){
+  if(!guests.length)return toast('Não há convidados para exportar.',true);
+  if(!window.JSZip||!window.QRCode)return toast('Bibliotecas de exportação indisponíveis. Verifique sua conexão.',true);
+  const button=$('export-qrs'),progress=$('qr-export-progress');
+  if(button.disabled)return;
+  button.disabled=true;button.textContent='Preparando QR Codes…';
+  progress.textContent='Gerando 0 de '+guests.length+' imagens personalizadas.';
+  try{
+    const zip=new JSZip();
+    const ordered=[...guests].sort((a,b)=>(a.legacy_number??999999)-(b.legacy_number??999999));
+    for(let i=0;i<ordered.length;i++){
+      const g=ordered[i];
+      const div=document.createElement('div');
+      new QRCode(div,{text:'W26:'+g.qr_token,width:224,height:224,colorDark:'#101d32',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
+      const qr=div.querySelector('canvas')||div.querySelector('img');
+      if(!qr)throw Error('Falha ao gerar QR do registro '+(g.legacy_number??i+1));
+      const card=drawQrCard(qr,g);
+      zip.file('QR-'+safeName(g)+'.png',card.toDataURL('image/png').split(',')[1],{base64:true});
+      if((i+1)%5===0||i===ordered.length-1){
+        progress.textContent='Gerando '+(i+1)+' de '+ordered.length+' imagens personalizadas.';
+        await new Promise(resolve=>setTimeout(resolve,0));
+      }
+    }
+    progress.textContent='Compactando '+ordered.length+' QR Codes…';
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:4}});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='QR-Codes-Casamento-Victoria-Levi.zip';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),15000);
+    progress.textContent=ordered.length+' QR Codes gerados. Cada imagem corresponde a um registro exclusivo.';
+    toast('Pacote de QR Codes gerado com sucesso.');
+  }catch(e){failed(e);progress.textContent='Falha na geração. Tente novamente.'}
+  finally{button.disabled=false;button.textContent='Baixar todos os QR Codes (.ZIP)'}
 }
 async function loadStaff(){
   const {data,error}=await api.from('wedding_staff').select('email,role,active,created_at').order('email');
