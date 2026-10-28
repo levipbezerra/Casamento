@@ -6,9 +6,9 @@
 <main class="container">
 <section class="login-shell" id="auth-shell"><div class="login-brand">V·L</div><div class="eyebrow" style="margin-top:20px">Acesso da recepção</div><h1>Sejam bem-vindos.</h1><p>Identificação segura e rápida dos convidados pelo QR Code do convite. Acesso permitido somente à equipe autorizada.</p>
 <form id="auth-form"><label class="field">E-mail autorizado<input type="email" id="auth-email" required autocomplete="email" placeholder="seu@email.com"></label><button class="btn gold full" type="submit">Receber link de acesso</button></form>
-<p class="subtle" id="auth-message" aria-live="polite">Peça ao administrador para autorizar seu e-mail antes de entrar.</p></section>
+<p class="subtle" id="auth-message" aria-live="polite">Se já entrou no painel de convidados, abra a portaria pelo mesmo navegador, no mesmo endereço do site. A sessão do administrador também é válida aqui.</p><p class="subtle"><a href="./convidados.html">Já tenho acesso à gestão de convidados</a></p></section>
 <section id="app-shell" hidden>
-<div class="page-header"><div><div class="eyebrow">Recepção · 28 de dezembro de 2026</div><h1>Check-in de convidados</h1><p>Aproxime a câmera do QR Code impresso no convite.</p></div><button class="btn outline" id="refresh-stats">Atualizar números</button></div>
+<div class="page-header"><div><div class="eyebrow">Recepção · 28 de dezembro de 2026</div><h1>Check-in de convidados</h1><p>Aproxime a câmera do QR Code impresso no convite.</p></div><div class="header-actions"><a class="btn outline" href="./convidados.html" id="back-admin" hidden>Voltar à gestão</a><button class="btn outline" id="refresh-stats">Atualizar números</button></div></div>
 <div class="mini-stats"><div><small>Convidados</small><strong id="door-total">—</strong></div><div><small>Presentes</small><strong id="door-arrived">—</strong></div><div><small>Aguardando</small><strong id="door-pending">—</strong></div></div>
 <div class="door-layout">
 <div class="scan-stage"><div class="eyebrow">Leitura do convite</div><h2 style="margin:12px 0;color:white">Escanear QR Code</h2><div id="reader"></div>
