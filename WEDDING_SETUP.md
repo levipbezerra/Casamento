@@ -1,61 +1,55 @@
-# Lista de convidados · Victória & Levi
+# Casamento Victória & Levi — painel privado de convidados e portaria
 
-## Rotas separadas
+## Aplicação publicada
 
-- \`/index.html\` — site atual e presentes (sem alterações);
-- \`/convidados.html\` — gestão, exclusivamente administrador;
-- \`/portaria.html\` — equipe autorizada, leitura dos QR Codes e confirmação de entrada.
+- Site público e presentes: `https://levievictoria.vercel.app/`
+- Administração exclusiva: `https://levievictoria.vercel.app/convidados.html`
+- Recepção (operadores autorizados): `https://levievictoria.vercel.app/portaria.html`
+- Repositório: `levipbezerra/Casamento`, branch `main`; Vercel `levievictoria`.
+- Os módulos de convidados/portaria **não aparecem no menu público** nem dependem da lista de presentes.
 
-Nenhuma dessas duas rotas foi adicionada ao menu público de presentes.
+## Banco e estado confirmado — 28/10/2026
 
-## Dados e segurança
+- Projeto Supabase pessoal `fgmhrekiowkfrqvhxorw`, chave apenas **publicável** em `wedding-config.js`.
+- `public.wedding_guests`: 118 registros importados em particular, 8 categorias, 118 tokens UUID exclusivos. Nenhum check-in marcado na importação.
+- `public.wedding_staff`: 1 administrador ativo e nenhum operador de portaria pré-autorizado. A administração pode cadastrar operadores pela interface.
+- `public.wedding_events`: trilha de confirmação e reversão. `RLS` está ativada nas três tabelas.
+- As informações nominais nunca são inseridas no GitHub público. Não publique exportações, tokens individuais nem listas de convidados.
+- **Não execute novamente o SQL de criação sem necessidade**; a estrutura já existe. Uma nova importação com o mesmo número atualiza o cadastro preservando QR Codes e histórico de entrada.
 
-O repositório \`Casamento\` é **público**. A lista nominal **não está versionada**. Importe-a de forma privada na área autenticada com a planilha original ou com o CSV seguro fornecido ao proprietário.
+## Fluxo de acesso
 
-A camada de dados contém:
-- \`wedding_guests\`: cadastro completo, categoria (sem coluna de quem convidou), token UUID aleatório e check-in;
-- \`wedding_staff\`: administrador e colaboradores da portaria;
-- \`wedding_events\`: trilha de entradas e reversões.
-- RLS para permitir acesso nominal em lote **somente ao administrador**. A portaria acessa **um convidado por token** através das funções \`wedding_lookup_qr\` e \`wedding_confirm_entry\`, que verificam autenticação e permissão. O check-in usa bloqueio transacional para impedir duplicidade.
-- Código do QR: \`W26:<UUID opaco>\`, **sem nome, telefone ou outros dados pessoais**.
-- O administrador pode desfazer uma entrada e testar novamente o mesmo QR.
-- Não há cadastro público, lista nominal ou botão de convidado no site de presentes.
+1. Abra `/convidados.html`; informe o e-mail cadastrado como administrador e use o link de login recebido por e-mail.
+2. Em **Convidados**, busque, filtre, adicione, edite, exclua, confirme ou desfaça entrada. Editar nome/categoria não altera o token do QR.
+3. Em **Importação e exportação**, baixe um QR individual na coluna de ações ou use **Baixar todos os QR Codes (.ZIP)** para gerar 118 artes PNG privadamente no navegador. O ZIP pode ser utilizado para posicionar cada QR no exibível correspondente.
+4. Em **Equipe da portaria**, autorize o e-mail de cada recepcionista. Cada um entra pelo link separado `/portaria.html`.
+5. Na portaria, leia o QR usando a câmera em HTTPS ou digite o código manual. O operador confere nome/categoria e clica **Confirmar entrada**.
+6. Segunda leitura indica **Já entrou**. Para testar antes da cerimônia, use **Desfazer entrada** no painel administrativo e escaneie novamente. Esse reset é de uso exclusivo do administrador.
+7. O QR contém apenas `W26:<UUID>`. Jamais transmite nome/telefone ou dados pessoais no código.
 
-## Ativação do banco de dados
+## Segurança
 
-O módulo frontend já aponta para a URL e chave **publicável** do projeto Supabase "Portal Eetika" em \`wedding-config.js\` — não é uma credencial privilegiada. Há isolamento por tabelas, funções e regras de acesso próprios.
+- O painel exige autenticação Supabase e perfil `admin` registrado na tabela `wedding_staff`.
+- A portaria exige autenticação e papel `door` ou `admin`.
+- Apenas o administrador acessa a listagem de convidados em massa. O operador pode consultar **um token por vez** por meio de RPCs do banco.
+- RPCs `wedding_lookup_qr`, `wedding_confirm_entry` e `wedding_gate_stats` confirmam `auth.uid()` e papel autorizado. Check-in usa lock de linha na transação para evitar duplicidade.
+- `anon` não tem permissão para ler tabelas de convidados/equipe/eventos; RLS protege os dados. Não substitua chave publicável por `service_role` no frontend.
+- A autorização e os redirects de login são diferentes das proteções de implantação configuradas no Vercel.
 
-1. Corrija o acesso PostgreSQL do projeto no Supabase se o banco responder com \`28P01 password authentication failed\`. Sem isso, o frontend não poderá acessar suas tabelas.
-2. Execute \`database/wedding-setup.sql\` no SQL Editor do projeto correto. Execute privadamente, no SQL Editor do Supabase, o comando de bootstrap comentado ao final desse SQL usando seu e-mail verificado. Nunca publique o e-mail administrativo no repositório.
-3. Em Supabase Authentication > URL Configuration, adicione os endereços HTTPS exatos de \`convidados.html\` e \`portaria.html\` aos URLs autorizados de redirecionamento de e-mail.
-4. Em Authentication, valide a política de signup e disparo de links por e-mail. A interface usa \`signInWithOtp\`: o endereço precisa ser autorizado na tabela \`wedding_staff\` para enxergar dados.
-5. Entre em \`convidados.html\` com o e-mail de administrador, faça a importação privada do arquivo completo (118 convidados) e confira o total.
-6. Na aba Equipe da portaria, autorize os e-mails da recepção. Essas contas acessam **apenas** \`portaria.html\`.
-7. Em \`convidados.html\`, gere os QR Codes para imprimir e colocar nos convites; confirme um teste pela portaria e desfaça a entrada no painel administrativo.
+## Configuração operacional a confirmar no painel Supabase
 
-**Atenção:** uma conta GitHub não é automaticamente uma conta de autenticação Supabase. A posse do e-mail deve ser comprovada pelo link mágico.
+O conector atual não oferece ajustes de **Authentication > URL Configuration** nem do provedor SMTP. Um administrador deve validar estes itens na console do projeto:
 
-## Bibliotecas carregadas por CDN
+- Adicionar `https://levievictoria.vercel.app/convidados.html` e `https://levievictoria.vercel.app/portaria.html` à lista **Redirect URLs** de Auth.
+- Garantir a entrega de Magic Links, inclusive para e-mails da equipe; o SMTP padrão de Supabase pode exigir configuração própria para destinatários externos.
+- Fazer login real na administração e na portaria por uma conta autorizada. Não considere a leitura de câmera verificada até executar esse teste em dispositivo HTTPS.
+- Se o domínio `vercel.app` exigir SSO do Vercel, revisar a política de proteção do projeto para permitir acesso ao site público. Isso não substitui a autenticação privada das áreas de convidados/portaria.
 
-- \`@supabase/supabase-js@2.58.0\` (autenticação, RLS, PostgREST)
-- \`qrcodejs@1.0.0\` (geração visual do QR)
-- \`html5-qrcode@2.3.8\` (câmera do recepcionista)
-- \`xlsx@0.18.5\` (importação local sem upload de arquivo para outro serviço)
+## Testes de aceite
 
-O frontend precisa de conexão à internet e HTTPS para uso da câmera. Nenhum arquivo de convidados é gravado no repositório. A planilha é lida no navegador autenticado e os dados permitidos são enviados ao banco.
-
-## Verificações de aceite
-
-- Sem login, ambas as páginas não mostram convidados.
-- Perfil portaria não deve conseguir \`select * from wedding_guests\` via REST.
-- Perfil administrador vê e edita os 118 registros; duplicidade de nomes mantém QR individual.
-- Uma entrada válida é aceita uma única vez; leitura repetida mostra "Já entrou".
-- A reversão pelo administrador apaga \`checked_in_at\` e volta a permitir entrada.
-- Cada edição de nome e tipo preserva \`qr_token\`.
-- O site original de presentes continua inalterado.
-
-**Status de implementação:** os arquivos de interface, lógica e SQL estão no GitHub. A aplicação em produção depende de concluir a migração do banco, cadastrar os e-mails/redirects e importar a lista privadamente. Não declare sincronização ativa até validar esses passos.
-
-## Hospedagem declarada no GitHub
-
-O repositório informa o endereço `https://casamento-psi-two.vercel.app`. Após confirmar o deploy, os caminhos previstos são `/convidados.html` e `/portaria.html`. O projeto não apareceu na conta Vercel conectada a esta conversa, portanto não foi possível verificar que esses caminhos já estão disponíveis na publicação.
+- Admin autenticado: lista dos 118 com filtros/edições, QR individual e arquivo ZIP de 118 PNGs.
+- Sem autenticação: nenhuma lista nominal é exibida.
+- Operador: somente leitura por QR; não tem SELECT em massa em `wedding_guests`.
+- Confirmação uma única vez; nova leitura acusa entrada já registrada.
+- Reversão pelo administrador restaura o estado e permite reutilizar o QR.
+- Index e módulos da lista de presentes permanecem independentes.
