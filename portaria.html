@@ -2,11 +2,24 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive"><title>Portaria | Victória & Levi</title>
 <link rel="stylesheet" href="./wedding-app.css"></head><body data-page="door">
-<header class="masthead"><div class="brand"><span class="monogram">V·L</span><span><strong>Victória & Levi</strong><small>28 de dezembro de 2026 · Portaria</small></span></div><div class="top-right"><span class="account" id="account-label">Check-in de convidados</span><button class="btn ghost sm" id="logout-btn" hidden>Sair</button></div></header>
+<header class="masthead"><div class="brand"><span class="monogram">V·L</span><span><strong>Victória & Levi</strong><small>28 de dezembro de 2026 · Portaria</small></span></div><div class="top-right"><span class="account" id="account-label">Check-in de convidados</span><button class="btn ghost sm" id="change-password-btn" hidden>Alterar senha</button><button class="btn ghost sm" id="logout-btn" hidden>Sair</button></div></header>
 <main class="container">
 <section class="login-shell" id="auth-shell"><div class="login-brand">V·L</div><div class="eyebrow" style="margin-top:20px">Acesso da recepção</div><h1>Sejam bem-vindos.</h1><p>Identificação segura e rápida dos convidados pelo QR Code do convite. Acesso permitido somente à equipe autorizada.</p>
-<form id="auth-form"><label class="field">E-mail autorizado<input type="email" id="auth-email" required autocomplete="email" placeholder="seu@email.com"></label><button class="btn gold full" type="submit">Receber link de acesso</button></form>
-<p class="subtle" id="auth-message" aria-live="polite">Se já entrou no painel de convidados, abra a portaria pelo mesmo navegador, no mesmo endereço do site. A sessão do administrador também é válida aqui.</p><p class="subtle"><a href="./convidados.html">Já tenho acesso à gestão de convidados</a></p></section>
+<div class="auth-tabs" role="tablist" aria-label="Escolher forma de acesso">
+  <button type="button" class="auth-tab active" id="auth-tab-password" role="tab" aria-selected="true" aria-controls="password-form">E-mail e senha</button>
+  <button type="button" class="auth-tab" id="auth-tab-link" role="tab" aria-selected="false" aria-controls="auth-form">Link por e-mail</button>
+</div>
+<form id="password-form" autocomplete="on">
+  <label class="field">E-mail de acesso<input id="password-email" type="email" required autocomplete="username" placeholder="seu@email.com"></label>
+  <label class="field">Senha<input id="password-secret" type="password" required autocomplete="current-password" placeholder="Sua senha cadastrada"></label>
+  <button class="btn gold full" type="submit">Entrar na portaria</button>
+</form>
+<form id="auth-form" hidden>
+  <label class="field">E-mail autorizado<input id="auth-email" type="email" required autocomplete="email" placeholder="seu@email.com"></label>
+  <button class="btn gold full" type="submit">Receber link de acesso</button>
+</form>
+<p class="subtle" id="auth-message" aria-live="polite">Entre com sua senha sem precisar receber um e-mail. O link continua disponível como alternativa.</p>
+<p class="auth-help">Não lembra a senha? Selecione <strong>Link por e-mail</strong>. Depois de entrar, use <strong>Alterar senha</strong> para definir outra.</p><p class="subtle"><a href="./convidados.html">Já tenho acesso à gestão de convidados</a></p></section>
 <section id="app-shell" hidden>
 <div class="page-header"><div><div class="eyebrow">Recepção · 28 de dezembro de 2026</div><h1>Check-in de convidados</h1><p>Aproxime a câmera do QR Code impresso no convite.</p></div><div class="header-actions"><a class="btn outline" href="./convidados.html" id="back-admin" hidden>Voltar à gestão</a><button class="btn outline" id="refresh-stats">Atualizar números</button></div></div>
 <div class="mini-stats"><div><small>Convidados</small><strong id="door-total">—</strong></div><div><small>Presentes</small><strong id="door-arrived">—</strong></div><div><small>Aguardando</small><strong id="door-pending">—</strong></div></div>
@@ -19,6 +32,17 @@
 <div style="margin-top:18px"><label class="field">Código manual (opcional)</label><div class="manual"><input type="text" id="manual-token" placeholder="W26:xxxxxxxx-xxxx-…" autocomplete="off"><button class="btn outline" id="manual-check">Consultar</button></div></div>
 </div></div><div class="note">O botão “Confirmar entrada” efetiva o registro para todos os dispositivos. Se o convidado já entrou, o sistema avisa e bloqueia duplicidade. Apenas o administrador pode desfazer o check-in.</div>
 </section></main>
+<div class="dialog-shade" id="password-modal" hidden>
+<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
+<header><h2 id="password-modal-title">Alterar senha de acesso</h2><button class="x" type="button" id="close-password-modal" aria-label="Fechar">×</button></header>
+<p class="subtle">Defina uma senha exclusiva para entrar no painel e na portaria sem depender de links por e-mail. A nova senha deve ter pelo menos 12 caracteres.</p>
+<form id="update-password-form" class="password-update-form">
+  <label class="field">Senha atual (se já tiver uma)<input id="current-password" type="password" autocomplete="current-password"></label>
+  <label class="field">Nova senha<input id="new-password" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label>
+  <label class="field">Confirmar nova senha<input id="confirm-password" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label>
+  <p class="subtle" id="update-password-message" aria-live="polite">Sua senha é protegida pelo Supabase Auth e não é salva neste site.</p>
+  <div class="dialog-footer"><button class="btn outline" type="button" id="cancel-password-modal">Cancelar</button><button class="btn gold" type="submit">Salvar nova senha</button></div>
+</form></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 <script src="./wedding-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script><script src="./wedding-app.js"></script></body></html>
