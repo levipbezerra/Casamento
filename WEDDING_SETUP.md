@@ -60,6 +60,17 @@ A sincronização em `/convidados.html` → **Importação e exportação**:
 
 **Importante:** não publique o arquivo de convidados ou seus QR Codes no repositório público. A atualização da interface não altera automaticamente dados do banco; a pessoa autorizada precisa importar o arquivo uma vez pelo próprio painel.
 
+## Acesso por duas formas — 28/10/2026
+
+A administração e a portaria oferecem **E-mail e senha** (padrão) ou **Link por e-mail**. O login com senha usa `supabase.auth.signInWithPassword` e não envia e-mail; o link continua via `supabase.auth.signInWithOtp`.
+
+- O administrador `levipbezerra2@gmail.com` possui usuário confirmado e senha já registrada no Supabase pessoal. **A alteração do frontend não modifica essa senha**.
+- Não há cadastro público de administradores. A solicitação de Magic Link pela administração usa `shouldCreateUser:false`.
+- Operadores autorizados pela gestão em `wedding_staff` podem solicitar seu primeiro link de portaria e criar uma conta verificada, com `shouldCreateUser:true` apenas na portaria. O acesso aos dados continua bloqueado por RLS e pelas funções que validam o papel autorizado.
+- Depois de entrar por qualquer método, use **Alterar senha**. A atualização usa `supabase.auth.updateUser` na sessão do próprio usuário e exige confirmação de uma senha de pelo menos 12 caracteres no formulário.
+- Se o Supabase retornar `email rate limit exceeded`, o login com **senha já existente** continua sem depender da cota de envio de e-mails. Se o usuário não souber sua senha, será necessário recuperar o acesso por um método de identidade válido quando o serviço de envio estiver disponível, ou providenciar recuperação administrativa pelo provedor de autenticação.
+- Nunca coloque senhas, hashes, `service_role` ou tokens de QR em arquivos públicos do GitHub.
+
 ## Recuperação do redirecionamento de e-mail (28/10/2026)
 
 O Supabase pode ignorar o `emailRedirectTo` da área privada se o endereço não estiver na allowlist de Auth, ou se o template usar a URL inicial em vez da URL de retorno. Nesses casos, o Magic Link válido chega a `/` com `#access_token=...` (fluxo implícito) ou `?code=...` (PKCE).
