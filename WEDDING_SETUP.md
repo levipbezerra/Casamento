@@ -45,6 +45,21 @@ O conector atual não oferece ajustes de **Authentication > URL Configuration** 
 - Fazer login real na administração e na portaria por uma conta autorizada. Não considere a leitura de câmera verificada até executar esse teste em dispositivo HTTPS.
 - Se o domínio `vercel.app` exigir SSO do Vercel, revisar a política de proteção do projeto para permitir acesso ao site público. Isso não substitui a autenticação privada das áreas de convidados/portaria.
 
+## Atualização para a planilha de 110 convidados — 28/10/2026
+
+A planilha atual possui **110 pessoas na relação principal** e um segundo bloco com **8 integrantes da equipe de apoio** (7 Banda, 1 Cerimonialista). Esses 8 registros não devem inflar os indicadores da lista principal.
+
+A sincronização em `/convidados.html` → **Importação e exportação**:
+1. Aceita a planilha `.xlsx` original ou CSV privado com cabeçalhos `legacy_number`, `name`, `guest_type`, `list_ok`, `invitation_status`.
+2. Detecta o bloco secundário da planilha após a separação e não o inclui nos totais da relação principal.
+3. Compara os nomes completos ou correspondências de primeiro nome e tipo que sejam únicas, **sem vincular QR Codes pelo número original**.
+4. Informa previamente quantas pessoas conservarão o QR, quantas terão QR novo e quem sairá da lista, e solicita confirmação.
+5. Baixa um backup privado dos cadastros e QR Codes antes de executar alterações.
+6. Libera os números antigos, atualiza identidades correspondentes, cria novos registros, remove os ausentes (somente se não houver check-in), recarrega e valida o total e os nomes.
+7. Preserva `rsvp_status` quando a planilha não contém essa coluna e preserva os tokens de QR das correspondências únicas.
+
+**Importante:** não publique o arquivo de convidados ou seus QR Codes no repositório público. A atualização da interface não altera automaticamente dados do banco; a pessoa autorizada precisa importar o arquivo uma vez pelo próprio painel.
+
 ## Recuperação do redirecionamento de e-mail (28/10/2026)
 
 O Supabase pode ignorar o `emailRedirectTo` da área privada se o endereço não estiver na allowlist de Auth, ou se o template usar a URL inicial em vez da URL de retorno. Nesses casos, o Magic Link válido chega a `/` com `#access_token=...` (fluxo implícito) ou `?code=...` (PKCE).
