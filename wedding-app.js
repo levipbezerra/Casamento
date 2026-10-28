@@ -136,12 +136,18 @@ async function requestMagicLink(ev){
   try{
     const redirect=window.location.origin+window.location.pathname;
     try{localStorage.setItem('levih-login-intent',JSON.stringify({page:PAGE,time:Date.now()}))}catch(_){}
-    const {error}=await api.auth.signInWithOtp({email,options:{emailRedirectTo:redirect,shouldCreateUser:false}});
+    const {error}=await api.auth.signInWithOtp({email,options:{emailRedirectTo:redirect,shouldCreateUser:PAGE==='door'}});
     if(error)throw error;
     $('auth-message').textContent='Verifique sua caixa de entrada. Abra o link neste dispositivo para acessar.';
     toast('Link enviado. Confira seu e-mail.');
-  }catch(e){failed(e,'Falha ao enviar e-mail.');$('auth-message').textContent='Não foi possível enviar. Verifique as configurações de autenticação.'}
-  finally{button.disabled=false}
+  }catch(e){
+    console.error('Falha no envio do link de acesso:',e?.code||e?.name);
+    const limited=/rate limit|too many requests|over_email_send_rate_limit/i.test(String(e?.message||'')+' '+String(e?.code||''));
+    $('auth-message').textContent=limited?
+      'O limite de envio de e-mails foi atingido. Se já possui senha, selecione E-mail e senha para entrar sem aguardar o limite.':
+      'Não foi possível enviar o link. Confira a configuração de autenticação e tente novamente.';
+    toast($('auth-message').textContent,true);
+  }finally{button.disabled=false}
 }
 async function restore(user){
   if(!user?.email)return;
