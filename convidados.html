@@ -14,7 +14,7 @@
 
 <section id="app-shell" hidden>
 <div class="page-header"><div><div class="eyebrow">Central do casamento · Uso exclusivo</div><h1>Gestão de convidados</h1><p>Cadastros, confirmações de presença e QR Codes individuais.</p></div>
-<div class="header-actions"><button class="btn outline" id="import-top">Importar planilha</button><button class="btn gold" id="add-guest">+ Novo convidado</button></div></div>
+<div class="header-actions"><a class="btn outline" id="open-door" href="./portaria.html" title="Abrir portaria com a mesma conta e sessão">Abrir portaria <span aria-hidden="true">↗</span></a><button class="btn outline" id="import-top">Importar planilha</button><button class="btn gold" id="add-guest">+ Novo convidado</button></div></div>
 
 <nav class="tabs" aria-label="Seções da gestão">
 <button class="tab active" data-view="guests">Convidados</button>
@@ -44,7 +44,7 @@
 <form class="fields" id="staff-form"><label class="field">E-mail da pessoa<input id="staff-email" type="email" required placeholder="recepcao@exemplo.com"></label>
 <label class="field">Permissão<select id="staff-role" disabled><option value="door">Portaria — apenas confirmar entradas</option></select></label>
 <div class="field span"><button class="btn gold" type="submit">Autorizar perfil</button></div></form>
-<div class="note">Depois de autorizado, o colaborador acessa o link separado da portaria e solicita um link de entrada no próprio e-mail.</div>
+<div class="note">Sua conta de administrador já pode abrir a portaria. Para recepcionistas, autorize o e-mail acima e compartilhe o link exclusivo. O acesso usa uma sessão individual por dispositivo.</div><p><a class="btn gold" href="./portaria.html">Abrir sistema da portaria</a> <button class="btn outline" type="button" id="copy-door-link">Copiar link para equipe</button></p>
 <div id="staff-list" class="staff-grid"></div>
 </div></div>
 
