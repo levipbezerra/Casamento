@@ -77,6 +77,7 @@ async function restore(user){
     }
     currentUser=user;role=data.role;setViewAuth(true);
     $('account-label').textContent=email+(PAGE==='door'?' · Portaria':' · Administração');
+    if(PAGE==='door'&&$('back-admin'))$('back-admin').hidden=data.role!=='admin';
     if(PAGE==='admin'){bindAdmin();await loadGuests();await loadStaff()}
     else {bindDoor();await loadDoorStats()}
   }catch(e){setViewAuth(false);$('auth-message').textContent='Base de dados indisponível ou não preparada. Verifique a conexão com o Supabase.';failed(e)}
@@ -93,6 +94,7 @@ function bindAdmin(){
   if(adminBound)return;adminBound=true;
   $('add-guest').addEventListener('click',()=>openEditor());
   $('import-top').addEventListener('click',()=>switchTab('files'));
+  $('copy-door-link').addEventListener('click',()=>{const url=new URL('portaria.html',window.location.href).href;navigator.clipboard?.writeText(url).then(()=>toast('Link da portaria copiado.')).catch(()=>window.prompt('Copie o link da portaria:',url))||window.prompt('Copie o link da portaria:',url)});
   $('reload-guests').addEventListener('click',loadGuests);
   $('search-guests').addEventListener('input',renderGuests);
   $('type-filter').addEventListener('change',renderGuests);
