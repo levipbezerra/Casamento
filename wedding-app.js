@@ -383,6 +383,7 @@ async function importSheet(){
     const plan=reconcileGuests(records,existing);
     if(plan.removed.some(g=>g.checked_in_at))
       throw Error('Há entradas já registradas em pessoas fora da nova lista. Desfaça essas entradas antes de substituir a relação.');
+    const previewList=items=>items.slice(0,15).map(g=>'• '+g.name).join('\n')+(items.length>15?'\n… e mais '+(items.length-15):'');
     const details='LISTA PRINCIPAL: '+records.length+' convidados\n'+
       'QR Codes preservados por identidade: '+plan.matched.length+'\n'+
       'Novos QR Codes necessários: '+plan.added.length+'\n'+
@@ -390,7 +391,10 @@ async function importSheet(){
       'Equipe no segundo bloco (não importada): '+ignored+'\n\n'+
       'A numeração será atualizada, as pessoas ausentes serão retiradas e '+
       'o sistema baixará um backup privado antes da alteração. '+
-      'Registros sem correspondência única terão um NOVO QR Code.\n\nConfirmar sincronização?';
+      'Registros sem correspondência única terão um NOVO QR Code.\n\n'+
+      (plan.added.length?'NOVOS QR Codes:\n'+previewList(plan.added)+'\n\n':'')+
+      (plan.removed.length?'REGISTROS QUE SAIRÃO DA LISTA:\n'+previewList(plan.removed)+'\n\n':'')+
+      'Confirmar sincronização?';
     summary.textContent='Prévia: '+records.length+' convidados; '+plan.matched.length+' QR Codes preservados; '+
       plan.added.length+' novos; '+plan.removed.length+' removidos; '+ignored+' da equipe separados.';
     if(!confirm(details))return;
